@@ -90,9 +90,8 @@ if (my_key == "") {
 }
 
 # Fetch live buses
-live_buses <- fetch_warsaw_transit(api_key = my_key, vehicle_type = 1)
-head(live_buses)
-
+live_buses <- fetch_warsaw_transit(api_key = my_key, vehicle_type = 1) %>% 
+  clean_data(max_age_mins = 30)
 # Fetch live trams
 live_trams <- fetch_warsaw_transit(api_key = my_key, vehicle_type = 2)
-head(live_trams)
+
