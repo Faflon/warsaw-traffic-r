@@ -17,7 +17,7 @@ Vehicle <- R6Class("Vehicle",
                        active = list(
                          id = function(value) {
                            if (missing(value)) return(private$.id)
-                           stop("Error: 'id' is read-only and cannot be modified.")
+                           stop("Error: 'id' is read-only.")
                          },
                          line = function(value) {
                            if (missing(value)) return(private$.line)

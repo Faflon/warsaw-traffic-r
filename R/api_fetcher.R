@@ -43,7 +43,7 @@ fetch_warsaw_transit <- function(api_key, vehicle_type = 1) {
   # If the connection completely failed, return an empty data frame
   if (is.null(response)) return(data.frame())
   
-  # Check HTTP Status (e.g., 404, 500)
+  # Check HTTP Status
   if (http_error(response)) {
     warning("API returned an error. HTTP Status: ", status_code(response))
     return(data.frame())
@@ -93,5 +93,6 @@ if (my_key == "") {
 live_buses <- fetch_warsaw_transit(api_key = my_key, vehicle_type = 1) %>% 
   clean_data(max_age_mins = 30)
 # Fetch live trams
-live_trams <- fetch_warsaw_transit(api_key = my_key, vehicle_type = 2)
+live_trams <- fetch_warsaw_transit(api_key = my_key, vehicle_type = 2) %>% 
+  clean_data(max_age_mins = 30)
 
