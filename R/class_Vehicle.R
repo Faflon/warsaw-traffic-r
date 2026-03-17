@@ -5,7 +5,7 @@ library(R6)
 #' @description A base class for buses and trams.
 #' @export
 #' 
-Vehicle <- R6::R6Class("Vehicle",
+Vehicle <- R6Class("Vehicle",
                        private = list(
                          .id = NULL,
                          .line = NULL,
@@ -60,4 +60,67 @@ Vehicle <- R6::R6Class("Vehicle",
                            stop("This method should be implemented by the specific child classes.")
                          }
                        )
+)
+
+#' R6 Child Class Representing a Bus
+#'
+#' @description Inherits from Vehicle. Vulnerable to standard road traffic.
+#' @export
+Bus <- R6Class("Bus",
+                   inherit = Vehicle,
+                   
+                   public = list(
+                     initialize = function(id, line, lon, lat, last_update) {
+                       super$initialize(id, line, lon, lat, last_update)
+                     },
+                     
+                     #' @description Check if the bus route intersects with a traffic disruption
+                     #' @param danger_polygon An 'sf' polygon representing the blocked area
+                     check_disruption = function(danger_polygon) {
+                       
+                       # PLACEHOLDER FOR FUTURE SFNETWORKS LOGIC
+                       # 1. Fetch the route polyline for this specific bus line
+                       # 2. Use sf::st_intersects() to see if the route hits the danger_polygon
+                       # 3. If TRUE: use sfnetworks to find the next safe bus stop and calculate detour
+                       
+                       message(sprintf("Bus %s on line %s is scanning for road traffic ahead...", self$id, self$line))
+                       
+                       # Future: If intersection is found, we will trigger a state change here
+                     }
+                   )
+)
+
+#' R6 Child Class Representing a Tram
+#'
+#' @description Inherits from Vehicle. Vulnerable only to track-specific disruptions.
+#' @export
+Tram <- R6Class("Tram",
+                    inherit = Vehicle,
+                    
+                    public = list(
+                      
+                      initialize = function(id, line, lon, lat, last_update) {
+                        super$initialize(id, line, lon, lat, last_update)
+                      },
+                      
+                      #' @description Check if the tram is affected by a disruption
+                      #' @param danger_polygon An 'sf' polygon representing the blocked area
+                      #' @param disruption_type A character string (e.g., "traffic", "track_blockage")
+                      check_disruption = function(danger_polygon, disruption_type) {
+                        
+                        # Trams glide right past normal car traffic
+                        if (disruption_type == "traffic") {
+                          message(sprintf("Tram %s on line %s ignores general road traffic.", self$id, self$line))
+                          return(invisible(self))
+                        }
+                        
+                        # PLACEHOLDER FOR FUTURE SF LOGIC
+                        # 1. Fetch the track polyline for this specific tram line
+                        # 2. Use sf::st_intersects() to see if the track hits the danger_polygon
+                        # 3. If TRUE and disruption_type is "track_blockage":
+                        # 4. Trigger a "hard stop" status (no detours possible for trams)
+                        
+                        message(sprintf("Tram %s on line %s is scanning for blocked rails ahead...", self$id, self$line))
+                      }
+                    )
 )
