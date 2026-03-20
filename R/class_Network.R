@@ -1,12 +1,8 @@
-library(R6)
-library(sf)
-library(dplyr)
-
 #' R6 Class Representing the Transit Network Manager
 #'
 #' @description Manages a fleet of Bus and Tram objects and handles global spatial updates.
 #' @export
-TransitNetwork <- R6Class("TransitNetwork",
+TransitNetwork <- R6::R6Class("TransitNetwork",
                           private = list(
                               .fleet = list() #all Bus and Tram objects
                             ),

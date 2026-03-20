@@ -1,11 +1,9 @@
-library(R6)
-
 #' R6 Parent Class Representing a Transit Vehicle
 #'
 #' @description A base class for buses and trams.
 #' @export
 #' 
-Vehicle <- R6Class("Vehicle",
+Vehicle <- R6::R6Class("Vehicle",
                        private = list(
                          .id = NULL,
                          .line = NULL,
@@ -66,7 +64,7 @@ Vehicle <- R6Class("Vehicle",
 #'
 #' @description Inherits from Vehicle. Vulnerable to standard road traffic.
 #' @export
-Bus <- R6Class("Bus",
+Bus <- R6::R6Class("Bus",
                    inherit = Vehicle,
                    
                    public = list(
@@ -94,7 +92,7 @@ Bus <- R6Class("Bus",
 #'
 #' @description Inherits from Vehicle. Vulnerable only to track-specific disruptions.
 #' @export
-Tram <- R6Class("Tram",
+Tram <- R6::R6Class("Tram",
                     inherit = Vehicle,
                     
                     public = list(

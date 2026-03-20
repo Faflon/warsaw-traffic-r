@@ -4,7 +4,7 @@
 #' @param max_age_mins Maximum allowed age of the data point in minutes. Default is 10.
 #' @return A cleaned data frame with only recently updated vehicles.
 #' @export
-clean_data <- function(df, max_age_mins = 10) {
+clean_stale_data <- function(df, max_age_mins = 10) {
   if (nrow(df) == 0 || !"Time" %in% colnames(df)) return(df)
   
   # The API returns time as a string (e.g., "2026-03-10 16:45:00")

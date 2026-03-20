@@ -1,6 +1,3 @@
-library(httr)
-library(jsonlite)
-library(dplyr)
 
 #' Fetch Live Public Transit Data from Warsaw API
 #'
@@ -52,7 +49,7 @@ fetch_warsaw_transit <- function(api_key, vehicle_type = 1) {
   # Parse the JSON
   parsed_data <- tryCatch({
     content_text <- content(response, as = "text", encoding = "UTF-8")
-    fromJSON(content_text, flatten = TRUE)
+    jsonlite::fromJSON(content_text, flatten = TRUE)
   }, error = function(e) {
     warning("Failed to parse JSON response: ", e$message)
     return(data.frame())
@@ -78,7 +75,7 @@ fetch_warsaw_transit <- function(api_key, vehicle_type = 1) {
     df$Lon <- as.numeric(df$Lon)
   }
   
-  return(df)
+  return(clean_stale_data(df))
 }
 
 # --- Usage Example ---
@@ -89,10 +86,4 @@ if (my_key == "") {
   stop("API key not found!")
 }
 
-# Fetch live buses
-live_buses <- fetch_warsaw_transit(api_key = my_key, vehicle_type = 1) %>% 
-  clean_data(max_age_mins = 30)
-# Fetch live trams
-live_trams <- fetch_warsaw_transit(api_key = my_key, vehicle_type = 2) %>% 
-  clean_data(max_age_mins = 30)
 
