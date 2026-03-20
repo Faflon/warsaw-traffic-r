@@ -2,8 +2,6 @@
 output: github_document
 ---
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
-
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -15,41 +13,146 @@ knitr::opts_chunk$set(
 
 # WarsawTraffic
 
-<!-- badges: start -->
-<!-- badges: end -->
+WarsawTraffic is an R package and interactive Shiny dashboard that simulates the real-time impact of traffic disruptions on the Warsaw public transit network. A user fetches live vehicle positions from the Warsaw Open Data API, drops a disruption pin on a map, and the tool instantly identifies which bus and tram lines are affected — flagging buses as delayed and trams as blocked based on whether their scheduled routes pass through the disrupted area.
 
-The goal of WarsawTraffic is to ...
+The project is built as a reusable, scalable tool rather than a one-off analysis. It can be applied to any disruption scenario in Warsaw by any user who installs the package.
+
+---
 
 ## Installation
 
-You can install the development version of WarsawTraffic from [GitHub](https://github.com/) with:
+Install the development version from GitHub:
 
-``` r
+```{r, eval = FALSE}
 # install.packages("pak")
 pak::pak("Faflon/warsaw-traffic-r")
 ```
 
-## Example
+---
 
-This is a basic example which shows you how to solve a common problem:
+## Setup
 
-```{r example}
+### 1. Warsaw Open Data API key
+
+The live vehicle feed requires a free API key from the Warsaw Open Data portal.
+
+1. Register at [api.um.warszawa.pl](https://api.um.warszawa.pl)
+2. Generate a personal API key
+3. Add it to your project-level `.Renviron` file:
+
+```
+WARSAW_API_KEY=your_key_here
+```
+
+Open `.Renviron` with:
+
+```{r, eval = FALSE}
+usethis::edit_r_environ(scope = "project")
+```
+
+Restart your R session after saving. The key is loaded securely with `Sys.getenv("WARSAW_API_KEY")` — it is never hardcoded and is excluded from version control via `.gitignore`.
+
+### 2. Download GTFS schedule data
+
+Download the current Warsaw transit schedule from ZTM:
+
+[https://gtfs.ztm.waw.pl/last](https://gtfs.ztm.waw.pl/last)
+
+Unzip the archive. You will need the folder path for the preprocessing step below.
+
+### 3. Preprocess route geometry
+
+Run this once after downloading the GTFS data. It reads the schedule files, builds spatial route lines for all active bus and tram routes, and saves them as `data/warsaw_routes.rds` inside the package:
+
+```{r, eval = FALSE}
 library(WarsawTraffic)
-## basic example code
+
+preprocess_gtfs(gtfs_dir = "path/to/your/gtfs/folder")
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+This step only needs to be repeated when you download a new GTFS feed. The function automatically detects today's active service schedule from `calendar.txt` and warns you if the feed has expired.
 
-```{r cars}
-summary(cars)
+---
+
+## Usage
+
+Launch the Shiny dashboard:
+
+```{r, eval = FALSE}
+WarsawTraffic::run_app()
 ```
 
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
+### Dashboard walkthrough
 
-You can also embed plots, for example:
+**Fetch vehicles** — click the "Fetch vehicles" button to pull live GPS positions for all active buses and trams from the Warsaw API. Vehicles appear as colored circles on the map. Green means on time.
 
-```{r pressure, echo = FALSE}
-plot(pressure)
+**Drop a disruption pin** — select a disruption type (road traffic or track blockage), then click anywhere on the map. The tool creates a 5-metre spatial buffer around the click point, checks it against all pre-loaded route geometries, and identifies every line whose path passes through the disrupted area.
+
+- Buses on affected lines turn **orange** (delayed). Buses react to road traffic disruptions only.
+- Trams on affected lines turn **red** (blocked). Trams react to track blockage disruptions only — they are immune to general road traffic since they run on dedicated rails.
+
+Click a vehicle marker to see its ID, line number, and current status in a popup. The status panel in the sidebar shows how many vehicles are currently affected.
+
+**Clear disruptions** — click "Clear disruptions" to reset all vehicles to on-time status and remove the disruption pin from the map.
+
+---
+
+## How it works
+
+### Architecture overview
+
+```
+Live API (Warsaw UM)
+  └─ fetch_warsaw_transit()          # defensive API fetcher with timeout and error handling
+       └─ clean_stale_data()         # filters out vehicles with old timestamps
+            └─ TransitNetwork$update_fleet()   # R6 fleet manager
+
+GTFS schedule (ZTM)
+  └─ preprocess_gtfs()               # one-time preprocessing
+       └─ build_route_shapes()       # sf LINESTRING per route, EPSG:2180
+            └─ warsaw_routes.rds     # loaded once on app startup
+
+User drops pin
+  └─ create_disruption_buffer()      # 5m sf polygon in EPSG:2180
+       └─ find_affected_lines()      # st_intersects() against route shapes
+            └─ TransitNetwork$apply_disruption()
+                 ├─ Bus$check_disruption()    # flags delayed if line matches
+                 └─ Tram$check_disruption()   # flags blocked if track_blockage type
 ```
 
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
+### Object-oriented design
+
+The package uses R6 classes to manage vehicle state across API refreshes. The class hierarchy is:
+
+- **`Vehicle`** (parent) — stores private GPS coordinates, line number, and delay status behind read-only active bindings. The `check_disruption()` method is an error-throwing placeholder that forces use of child classes.
+- **`Bus`** (child) — overrides `check_disruption(affected_lines)`. Sets delayed status if its line appears in the affected lines vector. Unaffected by track blockage events.
+- **`Tram`** (child) — overrides `check_disruption(affected_lines, disruption_type)`. Sets blocked status only for track blockage events. Ignores road traffic disruptions entirely.
+- **`TransitNetwork`** — fleet manager. Holds all `Bus` and `Tram` objects in a private named list. Handles fleet updates from API data, applies disruptions polymorphically, resets state, and exports the fleet as an `sf` spatial object for the Shiny map.
+
+### Spatial analysis
+
+Route geometry is sourced from the official ZTM GTFS feed. The preprocessing pipeline joins `shapes.txt` → `trips.txt` → `routes.txt` to attach human-readable line names to each spatial shape, then projects all geometries to the Polish national coordinate system (EPSG:2180). This projection is required so that buffer distances are computed in metres rather than degrees.
+
+When a disruption pin is dropped, `sf::st_intersects()` checks the 5-metre buffer polygon against all route linestrings simultaneously. Only routes whose physical path crosses the disrupted area are returned as affected — a crash on a highway does not flag a bus running on a parallel local road.
+
+---
+
+## Techniques used
+
+| Technique | Where |
+|---|---|
+| Advanced functions + defensive programming | `fetch_warsaw_transit()`, `clean_stale_data()`, `get_active_service_id()`, `create_disruption_buffer()`, `find_affected_lines()` |
+| Object-oriented programming (R6) | `Vehicle`, `Bus`, `Tram`, `TransitNetwork` classes |
+| Shiny application | `inst/shiny/ui.R`, `inst/shiny/server.R`, `run_app()` |
+| R package structure | `DESCRIPTION`, `NAMESPACE`, roxygen documentation, `man/`, `inst/` |
+| Spatial data analysis (extra) | GTFS geometry processing, CRS projection, `sf::st_intersects()`, `sf::st_buffer()` |
+| Live REST API integration (extra) | Warsaw Open Data API with timeout handling and JSON parsing |
+
+---
+
+## Authors
+
+- [Your Name] — [Student ID] — R package structure, GTFS preprocessing, API fetcher, disruption engine
+- [Partner Name] — [Student ID] — R6 class architecture, Shiny dashboard
+
+*Advanced Programming in R — [Your University], 2026*
