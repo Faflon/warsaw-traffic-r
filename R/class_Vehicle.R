@@ -60,33 +60,43 @@ Vehicle <- R6::R6Class("Vehicle",
                        )
 )
 
+
+
 #' R6 Child Class Representing a Bus
 #'
-#' @description Inherits from Vehicle. Vulnerable to standard road traffic.
+#' @description Inherits from Vehicle. Flags as delayed when its line
+#'   is affected by a road traffic disruption.
 #' @export
 Bus <- R6::R6Class("Bus",
                    inherit = Vehicle,
-                   
                    public = list(
+                     
+                     #' @description Initialize a Bus object
                      initialize = function(id, line, lon, lat, last_update) {
                        super$initialize(id, line, lon, lat, last_update)
                      },
                      
-                     #' @description Check if the bus route intersects with a traffic disruption
-                     #' @param danger_polygon An 'sf' polygon representing the blocked area
-                     check_disruption = function(danger_polygon) {
-                       
-                       # PLACEHOLDER FOR FUTURE SFNETWORKS LOGIC
-                       # 1. Fetch the route polyline for this specific bus line
-                       # 2. Use sf::st_intersects() to see if the route hits the danger_polygon
-                       # 3. If TRUE: use sfnetworks to find the next safe bus stop and calculate detour
-                       
-                       message(sprintf("Bus %s on line %s is scanning for road traffic ahead...", self$id, self$line))
-                       
-                       # Future: If intersection is found, we will trigger a state change here
+                     #' @description Check if this bus is on an affected line and flag it as delayed
+                     #' @param affected_lines A character vector of route_short_name values affected by the disruption
+                     check_disruption = function(affected_lines) {
+                       if (!is.character(affected_lines)) {
+                         stop("affected_lines must be a character vector of line names.")
+                       }
+                       if (self$line %in% affected_lines) {
+                         private$.is_delayed <- TRUE
+                       }
+                       invisible(self)
+                     },
+                     
+                     #' @description Reset this bus to non-delayed status
+                     clear_delay = function() {
+                       private$.is_delayed <- FALSE
+                       invisible(self)
                      }
                    )
 )
+
+
 
 #' R6 Child Class Representing a Tram
 #'
