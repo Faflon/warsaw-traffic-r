@@ -53,9 +53,9 @@ get_active_service_id <- function(calendar_path="data/gtfs/calendar.txt", target
   }
   
   # Determine the weekday of the target date
-  day_index <- as.POSIXlt(target_date)$wday
-  days_map <- c("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
-  weekday_name <- days_map[day_index]
+  day_index <- as.POSIXlt(target_date)$wday  # 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  days_map <- c("sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday")
+  weekday_name <- days_map[day_index + 1]  # +1 because R vectors are 1-indexed
   
   # Filter the data to find the active service_id
   active_rows <- calendar_data[
@@ -113,23 +113,23 @@ build_route_shapes <- function(gtfs_dir = "data/gtfs", output_path = "data/warsa
   shapes <- readr::read_csv(shapes_path, show_col_types = FALSE)
 
   # Join and filter to get relevant shape IDs and their route names
-  active_trips <- trips %>%
-    dplyr::filter(service_id %in% active_services) %>%
-    dplyr::left_join(routes, by = "route_id") %>%
-    dplyr::select(shape_id, route_short_name) %>%
+  active_trips <- trips |>
+    dplyr::filter(service_id %in% active_services) |>
+    dplyr::left_join(routes, by = "route_id") |>
+    dplyr::select(shape_id, route_short_name) |>
     dplyr::distinct()
   
   # Join active shapes and ensure the points are in the exact physical order
-  active_shapes <- shapes %>%
-    dplyr::inner_join(active_trips, by = "shape_id") %>%
+  active_shapes <- shapes |>
+    dplyr::inner_join(active_trips, by = "shape_id") |>
     dplyr::arrange(shape_id, shape_pt_sequence)
   
   # Convert to sf object, combine dots into lines, and project to metric Polish grid
-  routes_sf <- active_shapes %>%
-    sf::st_as_sf(coords = c("shape_pt_lon", "shape_pt_lat"), crs = 4326) %>%
-    dplyr::group_by(shape_id, route_short_name) %>%
-    dplyr::summarise(geometry = sf::st_combine(geometry), .groups = "drop") %>%
-    sf::st_cast("LINESTRING") %>%
+  routes_sf <- active_shapes |>
+    sf::st_as_sf(coords = c("shape_pt_lon", "shape_pt_lat"), crs = 4326) |>
+    dplyr::group_by(shape_id, route_short_name) |>
+    dplyr::summarise(geometry = sf::st_combine(geometry), .groups = "drop") |>
+    sf::st_cast("LINESTRING") |>
     sf::st_transform(crs = 2180)
   
   # Save the final processed object to the specified output path
