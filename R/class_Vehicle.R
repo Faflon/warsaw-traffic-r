@@ -100,35 +100,57 @@ Bus <- R6::R6Class("Bus",
 
 #' R6 Child Class Representing a Tram
 #'
-#' @description Inherits from Vehicle. Vulnerable only to track-specific disruptions.
+#' @description Inherits from Vehicle. Immune to road traffic. Flags as
+#'   blocked when its track is affected by a track blockage disruption.
 #' @export
 Tram <- R6::R6Class("Tram",
                     inherit = Vehicle,
-                    
+                    private = list(
+                      .is_blocked = FALSE
+                    ),
+                    active = list(
+                      #' @field is_blocked Read-only. TRUE if tram is blocked by a track disruption.
+                      is_blocked = function(value) {
+                        if (missing(value)) return(private$.is_blocked)
+                        stop("Error: 'is_blocked' is read-only.")
+                      }
+                    ),
                     public = list(
                       
+                      #' @description Initialize a Tram object
                       initialize = function(id, line, lon, lat, last_update) {
                         super$initialize(id, line, lon, lat, last_update)
                       },
                       
-                      #' @description Check if the tram is affected by a disruption
-                      #' @param danger_polygon An 'sf' polygon representing the blocked area
-                      #' @param disruption_type A character string (e.g., "traffic", "track_blockage")
-                      check_disruption = function(danger_polygon, disruption_type) {
+                      #' @description Check if this tram is affected by a disruption
+                      #' @param affected_lines A character vector of route_short_name values affected
+                      #' @param disruption_type A string: "traffic" or "track_blockage"
+                      check_disruption = function(affected_lines, disruption_type) {
+                        if (!is.character(affected_lines)) {
+                          stop("affected_lines must be a character vector of line names.")
+                        }
+                        if (!disruption_type %in% c("traffic", "track_blockage")) {
+                          stop("disruption_type must be 'traffic' or 'track_blockage'.")
+                        }
                         
-                        # Trams glide right past normal car traffic
+                        # Trams run on dedicated rails — road traffic does not affect them
                         if (disruption_type == "traffic") {
-                          message(sprintf("Tram %s on line %s ignores general road traffic.", self$id, self$line))
                           return(invisible(self))
                         }
                         
-                        # PLACEHOLDER FOR FUTURE SF LOGIC
-                        # 1. Fetch the track polyline for this specific tram line
-                        # 2. Use sf::st_intersects() to see if the track hits the danger_polygon
-                        # 3. If TRUE and disruption_type is "track_blockage":
-                        # 4. Trigger a "hard stop" status (no detours possible for trams)
-                        
-                        message(sprintf("Tram %s on line %s is scanning for blocked rails ahead...", self$id, self$line))
+                        # Track blockage: flag as both delayed and blocked if line is affected
+                        if (self$line %in% affected_lines) {
+                          private$.is_delayed <- TRUE
+                          private$.is_blocked <- TRUE
+                        }
+                        invisible(self)
+                      },
+                      
+                      #' @description Reset this tram to non-delayed, non-blocked status
+                      clear_delay = function() {
+                        private$.is_delayed <- FALSE
+                        private$.is_blocked <- FALSE
+                        invisible(self)
                       }
                     )
 )
