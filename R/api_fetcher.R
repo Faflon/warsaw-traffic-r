@@ -22,33 +22,48 @@ fetch_warsaw_transit <- function(api_key, vehicle_type = 1) {
   
   # Safe API Call using tryCatch
   # We use a timeout so the app doesn't freeze if the server is offline
-  response <- tryCatch({
-    GET(
+response <- tryCatch({
+    httr::GET(
       url = base_url,
       query = list(
         resource_id = resource_id,
         apikey = api_key,
         type = vehicle_type
       ),
-      timeout(10) 
+      httr::timeout(10)
     )
   }, error = function(e) {
     message("Failed to connect to the Warsaw Transit API: ", e$message)
     return(NULL)
+  })
+
+  if (is.null(response)) return(data.frame())
+
+  if (httr::http_error(response)) {
+    warning("API returned an error. HTTP Status: ", httr::status_code(response))
+    return(data.frame())
+  }
+
+  parsed_data <- tryCatch({
+    content_text <- httr::content(response, as = "text", encoding = "UTF-8")
+    jsonlite::fromJSON(content_text, flatten = TRUE)
+  }, error = function(e) {
+    warning("Failed to parse JSON response: ", e$message)
+    return(data.frame())
   })
   
   # If the connection completely failed, return an empty data frame
   if (is.null(response)) return(data.frame())
   
   # Check HTTP Status
-  if (http_error(response)) {
-    warning("API returned an error. HTTP Status: ", status_code(response))
+  if (httr::http_error(response)) {
+    warning("API returned an error. HTTP Status: ", httr::status_code(response))
     return(data.frame())
   }
   
   # Parse the JSON
   parsed_data <- tryCatch({
-    content_text <- content(response, as = "text", encoding = "UTF-8")
+    content_text <- httr::content(response, as = "text", encoding = "UTF-8")
     jsonlite::fromJSON(content_text, flatten = TRUE)
   }, error = function(e) {
     warning("Failed to parse JSON response: ", e$message)
