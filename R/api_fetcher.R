@@ -78,12 +78,4 @@ fetch_warsaw_transit <- function(api_key, vehicle_type = 1) {
   return(clean_stale_data(df))
 }
 
-# --- Usage Example ---
-my_key <- Sys.getenv("WARSAW_API_KEY")
-
-# Check if the key loaded properly
-if (my_key == "") {
-  stop("API key not found!")
-}
-
 
