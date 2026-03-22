@@ -4,16 +4,25 @@
 \alias{Tram}
 \title{R6 Child Class Representing a Tram}
 \description{
-Inherits from Vehicle. Vulnerable only to track-specific disruptions.
+Inherits from Vehicle. Immune to road traffic. Flags as
+blocked when its track is affected by a track blockage disruption.
 }
 \section{Super class}{
-\code{WarsawTraffic::Vehicle} -> \code{Tram}
+\code{\link[WarsawTraffic:Vehicle]{WarsawTraffic::Vehicle}} -> \code{Tram}
+}
+\section{Active bindings}{
+\if{html}{\out{<div class="r6-active-bindings">}}
+\describe{
+\item{\code{is_blocked}}{Read-only. TRUE if tram is blocked by a track disruption.}
+}
+\if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-Tram-new}{\code{Tram$new()}}
 \item \href{#method-Tram-check_disruption}{\code{Tram$check_disruption()}}
+\item \href{#method-Tram-clear_delay}{\code{Tram$clear_delay()}}
 \item \href{#method-Tram-clone}{\code{Tram$clone()}}
 }
 }
@@ -28,6 +37,7 @@ Inherits from Vehicle. Vulnerable only to track-specific disruptions.
 \if{html}{\out{<a id="method-Tram-new"></a>}}
 \if{latex}{\out{\hypertarget{method-Tram-new}{}}}
 \subsection{Method \code{new()}}{
+Initialize a Tram object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Tram$new(id, line, lon, lat, last_update)}\if{html}{\out{</div>}}
 }
@@ -37,20 +47,30 @@ Inherits from Vehicle. Vulnerable only to track-specific disruptions.
 \if{html}{\out{<a id="method-Tram-check_disruption"></a>}}
 \if{latex}{\out{\hypertarget{method-Tram-check_disruption}{}}}
 \subsection{Method \code{check_disruption()}}{
-Check if the tram is affected by a disruption
+Check if this tram is affected by a disruption
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Tram$check_disruption(danger_polygon, disruption_type)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Tram$check_disruption(affected_lines, disruption_type)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{danger_polygon}}{An 'sf' polygon representing the blocked area}
+\item{\code{affected_lines}}{A character vector of route_short_name values affected}
 
-\item{\code{disruption_type}}{A character string (e.g., "traffic", "track_blockage")}
+\item{\code{disruption_type}}{A string: "traffic" or "track_blockage"}
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Tram-clear_delay"></a>}}
+\if{latex}{\out{\hypertarget{method-Tram-clear_delay}{}}}
+\subsection{Method \code{clear_delay()}}{
+Reset this tram to non-delayed, non-blocked status
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Tram$clear_delay()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Tram-clone"></a>}}

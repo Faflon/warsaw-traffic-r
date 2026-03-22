@@ -4,16 +4,18 @@
 \alias{Bus}
 \title{R6 Child Class Representing a Bus}
 \description{
-Inherits from Vehicle. Vulnerable to standard road traffic.
+Inherits from Vehicle. Flags as delayed when its line
+is affected by a road traffic disruption.
 }
 \section{Super class}{
-\code{WarsawTraffic::Vehicle} -> \code{Bus}
+\code{\link[WarsawTraffic:Vehicle]{WarsawTraffic::Vehicle}} -> \code{Bus}
 }
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-Bus-new}{\code{Bus$new()}}
 \item \href{#method-Bus-check_disruption}{\code{Bus$check_disruption()}}
+\item \href{#method-Bus-clear_delay}{\code{Bus$clear_delay()}}
 \item \href{#method-Bus-clone}{\code{Bus$clone()}}
 }
 }
@@ -28,6 +30,7 @@ Inherits from Vehicle. Vulnerable to standard road traffic.
 \if{html}{\out{<a id="method-Bus-new"></a>}}
 \if{latex}{\out{\hypertarget{method-Bus-new}{}}}
 \subsection{Method \code{new()}}{
+Initialize a Bus object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Bus$new(id, line, lon, lat, last_update)}\if{html}{\out{</div>}}
 }
@@ -37,18 +40,28 @@ Inherits from Vehicle. Vulnerable to standard road traffic.
 \if{html}{\out{<a id="method-Bus-check_disruption"></a>}}
 \if{latex}{\out{\hypertarget{method-Bus-check_disruption}{}}}
 \subsection{Method \code{check_disruption()}}{
-Check if the bus route intersects with a traffic disruption
+Check if this bus is on an affected line and flag it as delayed
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Bus$check_disruption(danger_polygon)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Bus$check_disruption(affected_lines)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{danger_polygon}}{An 'sf' polygon representing the blocked area}
+\item{\code{affected_lines}}{A character vector of route_short_name values affected by the disruption}
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Bus-clear_delay"></a>}}
+\if{latex}{\out{\hypertarget{method-Bus-clear_delay}{}}}
+\subsection{Method \code{clear_delay()}}{
+Reset this bus to non-delayed status
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Bus$clear_delay()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Bus-clone"></a>}}

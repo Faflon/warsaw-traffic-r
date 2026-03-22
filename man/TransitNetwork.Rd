@@ -12,6 +12,8 @@ Manages a fleet of Bus and Tram objects and handles global spatial updates.
 \item \href{#method-TransitNetwork-new}{\code{TransitNetwork$new()}}
 \item \href{#method-TransitNetwork-update_fleet}{\code{TransitNetwork$update_fleet()}}
 \item \href{#method-TransitNetwork-apply_disruption}{\code{TransitNetwork$apply_disruption()}}
+\item \href{#method-TransitNetwork-reset_disruptions}{\code{TransitNetwork$reset_disruptions()}}
+\item \href{#method-TransitNetwork-get_spatial_data}{\code{TransitNetwork$get_spatial_data()}}
 \item \href{#method-TransitNetwork-clone}{\code{TransitNetwork$clone()}}
 }
 }
@@ -30,7 +32,7 @@ Manages a fleet of Bus and Tram objects and handles global spatial updates.
 \subsection{Method \code{update_fleet()}}{
 Update the fleet with fresh API data
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{TransitNetwork$update_fleet(api_data, vechicle_type)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{TransitNetwork$update_fleet(api_data, vehicle_type)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -47,19 +49,43 @@ Update the fleet with fresh API data
 \if{html}{\out{<a id="method-TransitNetwork-apply_disruption"></a>}}
 \if{latex}{\out{\hypertarget{method-TransitNetwork-apply_disruption}{}}}
 \subsection{Method \code{apply_disruption()}}{
-Send a disruption warning to all vehicles in the fleet
+Apply a disruption to all vehicles on affected lines
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{TransitNetwork$apply_disruption(polygon, type)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{TransitNetwork$apply_disruption(affected_lines, disruption_type)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{polygon}}{An 'sf' polygon representing the blocked area}
+\item{\code{affected_lines}}{A character vector of route_short_name values}
 
-\item{\code{type}}{A string: "traffic" or "track_blockage"}
+\item{\code{disruption_type}}{A string: "traffic" or "track_blockage"}
 }
 \if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-TransitNetwork-reset_disruptions"></a>}}
+\if{latex}{\out{\hypertarget{method-TransitNetwork-reset_disruptions}{}}}
+\subsection{Method \code{reset_disruptions()}}{
+Reset all vehicles in the fleet to non-delayed status
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{TransitNetwork$reset_disruptions()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-TransitNetwork-get_spatial_data"></a>}}
+\if{latex}{\out{\hypertarget{method-TransitNetwork-get_spatial_data}{}}}
+\subsection{Method \code{get_spatial_data()}}{
+Export the current fleet as an sf spatial object for map rendering
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{TransitNetwork$get_spatial_data()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+An sf object with columns: id, line, is_delayed, is_blocked, vehicle_type, geometry.
+Returns NULL if the fleet is empty.
 }
 }
 \if{html}{\out{<hr>}}
