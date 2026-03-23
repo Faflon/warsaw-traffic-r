@@ -35,6 +35,24 @@ Initialize a Bus object
 \if{html}{\out{<div class="r">}}\preformatted{Bus$new(id, line, lon, lat, last_update)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{id}}{A character string representing the vehicle ID.}
+
+\item{\code{line}}{A character string representing the route line number.}
+
+\item{\code{lon}}{A numeric value for the initial longitude.}
+
+\item{\code{lat}}{A numeric value for the initial latitude.}
+
+\item{\code{last_update}}{A string representing the timestamp of the data.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A new \code{Bus} object.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Bus-check_disruption"></a>}}
@@ -42,15 +60,20 @@ Initialize a Bus object
 \subsection{Method \code{check_disruption()}}{
 Check if this bus is on an affected line and flag it as delayed
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Bus$check_disruption(affected_lines)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Bus$check_disruption(affected_lines, disruption_type)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{affected_lines}}{A character vector of route_short_name values affected by the disruption}
+
+\item{\code{disruption_type}}{A string: "traffic", "track_blockage", or "both"}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Invisibly returns the \code{Bus} object for chaining.
 }
 }
 \if{html}{\out{<hr>}}
@@ -62,6 +85,9 @@ Reset this bus to non-delayed status
 \if{html}{\out{<div class="r">}}\preformatted{Bus$clear_delay()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+Invisibly returns the \code{Bus} object for chaining.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Bus-clone"></a>}}

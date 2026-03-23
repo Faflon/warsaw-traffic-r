@@ -1,5 +1,5 @@
 Package: WarsawTraffic
-Title: Sumulator of the impact of traffic disruptions on the Warsaw public transit network.
+Title: Sumulator of the impact of traffic disruptions on the Warsaw public transit network
 Version: 0.0.0.9000
 Authors@R: 
     person("Adam", "Jaworski", , "ap.jaworski3@student.uw.edu.pl", role = c("aut", "cre"))

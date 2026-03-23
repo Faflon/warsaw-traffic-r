@@ -2,9 +2,27 @@
 % Please edit documentation in R/class_Vehicle.R
 \name{Vehicle}
 \alias{Vehicle}
-\title{R6 Parent Class Representing a Transit Vehicle}
+\title{Base R6 Class Representing a Transit Vehicle}
 \description{
-A base class for buses and trams.
+A base class for buses and trams, storing common properties
+like ID, route line, spatial coordinates, and delay status.
+}
+\section{Active bindings}{
+\if{html}{\out{<div class="r6-active-bindings">}}
+\describe{
+\item{\code{id}}{Read-only. Returns the vehicle's ID.}
+
+\item{\code{line}}{Read-only. Returns the vehicle's route line.}
+
+\item{\code{lon}}{Read-only. Returns the vehicle's longitude.}
+
+\item{\code{lat}}{Read-only. Returns the vehicle's latitude.}
+
+\item{\code{last_update}}{Read-only. Returns the timestamp of the last GPS update.}
+
+\item{\code{is_delayed}}{Read-only. Returns TRUE if the vehicle is currently delayed.}
+}
+\if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -19,10 +37,29 @@ A base class for buses and trams.
 \if{html}{\out{<a id="method-Vehicle-new"></a>}}
 \if{latex}{\out{\hypertarget{method-Vehicle-new}{}}}
 \subsection{Method \code{new()}}{
+Initialize the vehicle
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Vehicle$new(id, line, lon, lat, last_update)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{id}}{A character string representing the vehicle ID.}
+
+\item{\code{line}}{A character string representing the route line number.}
+
+\item{\code{lon}}{A numeric value for the initial longitude.}
+
+\item{\code{lat}}{A numeric value for the initial latitude.}
+
+\item{\code{last_update}}{A string representing the timestamp of the data.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A new \code{Vehicle} object.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Vehicle-update_location"></a>}}
@@ -33,6 +70,20 @@ Update the vehicle's GPS coordinates and timestamp
 \if{html}{\out{<div class="r">}}\preformatted{Vehicle$update_location(new_lon, new_lat, new_time)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{new_lon}}{A numeric longitude.}
+
+\item{\code{new_lat}}{A numeric latitude.}
+
+\item{\code{new_time}}{A string representing the update time.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Invisibly returns the \code{Vehicle} object for chaining.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Vehicle-check_disruption"></a>}}
@@ -43,6 +94,13 @@ Placeholder for the disruption logic to be overridden by child classes
 \if{html}{\out{<div class="r">}}\preformatted{Vehicle$check_disruption(...)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Arguments to be passed to specific child class implementations.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Vehicle-clone"></a>}}

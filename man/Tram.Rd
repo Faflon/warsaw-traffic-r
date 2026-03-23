@@ -42,6 +42,24 @@ Initialize a Tram object
 \if{html}{\out{<div class="r">}}\preformatted{Tram$new(id, line, lon, lat, last_update)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{id}}{A character string representing the vehicle ID.}
+
+\item{\code{line}}{A character string representing the route line number.}
+
+\item{\code{lon}}{A numeric value for the initial longitude.}
+
+\item{\code{lat}}{A numeric value for the initial latitude.}
+
+\item{\code{last_update}}{A string representing the timestamp of the data.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A new \code{Tram} object.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Tram-check_disruption"></a>}}
@@ -57,9 +75,12 @@ Check if this tram is affected by a disruption
 \describe{
 \item{\code{affected_lines}}{A character vector of route_short_name values affected}
 
-\item{\code{disruption_type}}{A string: "traffic" or "track_blockage"}
+\item{\code{disruption_type}}{A string: "traffic", "track_blockage", or "both"}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Invisibly returns the \code{Tram} object for chaining.
 }
 }
 \if{html}{\out{<hr>}}
@@ -71,6 +92,9 @@ Reset this tram to non-delayed, non-blocked status
 \if{html}{\out{<div class="r">}}\preformatted{Tram$clear_delay()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+Invisibly returns the \code{Tram} object for chaining.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Tram-clone"></a>}}

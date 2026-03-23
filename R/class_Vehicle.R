@@ -1,6 +1,7 @@
-#' R6 Parent Class Representing a Transit Vehicle
+#' Base R6 Class Representing a Transit Vehicle
 #'
-#' @description A base class for buses and trams.
+#' @description A base class for buses and trams, storing common properties 
+#'   like ID, route line, spatial coordinates, and delay status.
 #' @export
 #' 
 Vehicle <- R6::R6Class("Vehicle",
@@ -13,26 +14,32 @@ Vehicle <- R6::R6Class("Vehicle",
                          .is_delayed = FALSE
                        ),
                        active = list(
+                         #' @field id Read-only. Returns the vehicle's ID.
                          id = function(value) {
                            if (missing(value)) return(private$.id)
                            stop("Error: 'id' is read-only.")
                          },
+                         #' @field line Read-only. Returns the vehicle's route line.
                          line = function(value) {
                            if (missing(value)) return(private$.line)
                            stop("Error: 'line' is read-only.")
                          },
+                         #' @field lon Read-only. Returns the vehicle's longitude.
                          lon = function(value) {
                            if (missing(value)) return(private$.lon)
                            stop("Error: 'lon' is read-only.")
                          },
+                         #' @field lat Read-only. Returns the vehicle's latitude.
                          lat = function(value) {
                            if (missing(value)) return(private$.lat)
                            stop("Error: 'lat' is read-only.")
                          },
+                         #' @field last_update Read-only. Returns the timestamp of the last GPS update.
                          last_update = function(value) {
                            if (missing(value)) return(private$.last_update)
                            stop("Error: 'last_update' is read-only.")
                          },
+                         #' @field is_delayed Read-only. Returns TRUE if the vehicle is currently delayed.
                          is_delayed = function(value) {
                            if (missing(value)) return(private$.is_delayed)
                            stop("Error: 'is_delayed' is read-only. Status must be updated via internal methods.")
@@ -40,6 +47,12 @@ Vehicle <- R6::R6Class("Vehicle",
                        ),
                        public = list(
                          #' @description Initialize the vehicle
+                         #' @param id A character string representing the vehicle ID.
+                         #' @param line A character string representing the route line number.
+                         #' @param lon A numeric value for the initial longitude.
+                         #' @param lat A numeric value for the initial latitude.
+                         #' @param last_update A string representing the timestamp of the data.
+                         #' @return A new `Vehicle` object.
                          initialize = function(id, line, lon, lat, last_update) {
                            if (missing(id) || missing(line)) stop("Vehicle ID and Line are required.")
                            private$.id <- as.character(id)
@@ -48,13 +61,19 @@ Vehicle <- R6::R6Class("Vehicle",
                          },
                          
                          #' @description Update the vehicle's GPS coordinates and timestamp
+                         #' @param new_lon A numeric longitude.
+                         #' @param new_lat A numeric latitude.
+                         #' @param new_time A string representing the update time.
+                         #' @return Invisibly returns the `Vehicle` object for chaining.
                          update_location = function(new_lon, new_lat, new_time) {
                            private$.lon <- as.numeric(new_lon)
                            private$.lat <- as.numeric(new_lat)
                            private$.last_update <- as.POSIXct(new_time, format="%Y-%m-%d %H:%M:%S", tz="Europe/Warsaw")
+                           invisible(self)
                          },
                          
                          #' @description Placeholder for the disruption logic to be overridden by child classes
+                         #' @param ... Arguments to be passed to specific child class implementations.
                          check_disruption = function(...) {
                            stop("This method should be implemented by the specific child classes.")
                          }
@@ -73,6 +92,12 @@ Bus <- R6::R6Class("Bus",
                    public = list(
                      
                      #' @description Initialize a Bus object
+                     #' @param id A character string representing the vehicle ID.
+                     #' @param line A character string representing the route line number.
+                     #' @param lon A numeric value for the initial longitude.
+                     #' @param lat A numeric value for the initial latitude.
+                     #' @param last_update A string representing the timestamp of the data.
+                     #' @return A new `Bus` object.
                      initialize = function(id, line, lon, lat, last_update) {
                        super$initialize(id, line, lon, lat, last_update)
                      },
@@ -80,6 +105,7 @@ Bus <- R6::R6Class("Bus",
                      #' @description Check if this bus is on an affected line and flag it as delayed
                      #' @param affected_lines A character vector of route_short_name values affected by the disruption
                      #' @param disruption_type A string: "traffic", "track_blockage", or "both"
+                     #' @return Invisibly returns the `Bus` object for chaining.
                      check_disruption = function(affected_lines, disruption_type) {
                        if (!is.character(affected_lines)) {
                          stop("affected_lines must be a character vector of line names.")
@@ -100,6 +126,7 @@ Bus <- R6::R6Class("Bus",
                      },
                      
                      #' @description Reset this bus to non-delayed status
+                     #' @return Invisibly returns the `Bus` object for chaining.
                      clear_delay = function() {
                        private$.is_delayed <- FALSE
                        invisible(self)
@@ -129,6 +156,12 @@ Tram <- R6::R6Class("Tram",
                     public = list(
                       
                       #' @description Initialize a Tram object
+                      #' @param id A character string representing the vehicle ID.
+                      #' @param line A character string representing the route line number.
+                      #' @param lon A numeric value for the initial longitude.
+                      #' @param lat A numeric value for the initial latitude.
+                      #' @param last_update A string representing the timestamp of the data.
+                      #' @return A new `Tram` object.
                       initialize = function(id, line, lon, lat, last_update) {
                         super$initialize(id, line, lon, lat, last_update)
                       },
@@ -136,6 +169,7 @@ Tram <- R6::R6Class("Tram",
                       #' @description Check if this tram is affected by a disruption
                       #' @param affected_lines A character vector of route_short_name values affected
                       #' @param disruption_type A string: "traffic", "track_blockage", or "both"
+                      #' @return Invisibly returns the `Tram` object for chaining.
                       check_disruption = function(affected_lines, disruption_type) {
                         if (!is.character(affected_lines)) {
                           stop("affected_lines must be a character vector of line names.")
@@ -158,6 +192,7 @@ Tram <- R6::R6Class("Tram",
                       },
                       
                       #' @description Reset this tram to non-delayed, non-blocked status
+                      #' @return Invisibly returns the `Tram` object for chaining.
                       clear_delay = function() {
                         private$.is_delayed <- FALSE
                         private$.is_blocked <- FALSE

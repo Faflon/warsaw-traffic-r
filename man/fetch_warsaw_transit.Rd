@@ -7,13 +7,25 @@
 fetch_warsaw_transit(api_key, vehicle_type = 1)
 }
 \arguments{
-\item{api_key}{A string containing your personal API key from api.um.warszawa.pl}
+\item{api_key}{A character string containing your personal API key from api.um.warszawa.pl.}
 
 \item{vehicle_type}{An integer: 1 for buses, 2 for trams. Default is 1.}
 }
 \value{
 A data frame containing the live locations and details of the vehicles.
+Returns an empty data frame if the connection or parsing fails.
 }
 \description{
-Fetch Live Public Transit Data from Warsaw API
+Fetches live GPS coordinates and metadata for buses or trams
+in Warsaw using the official UM Warszawa API. Automatically cleans stale
+data and converts coordinates to numeric format for spatial processing.
+}
+\examples{
+\dontrun{
+  # Fetch live bus data
+  buses <- fetch_warsaw_transit(api_key = "YOUR_API_KEY", vehicle_type = 1)
+  
+  # Fetch live tram data
+  trams <- fetch_warsaw_transit(api_key = "YOUR_API_KEY", vehicle_type = 2)
+}
 }

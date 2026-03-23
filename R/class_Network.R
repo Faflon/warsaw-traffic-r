@@ -1,27 +1,31 @@
-#' R6 Class Representing the Transit Network Manager
+#' Transit Network Manager
 #'
 #' @description Manages a fleet of Bus and Tram objects and handles global spatial updates.
 #' @export
 TransitNetwork <- R6::R6Class("TransitNetwork",
-                          private = list(
-                              .fleet = list() #all Bus and Tram objects
-                            ),
+                              private = list(
+                                .fleet = list() #all Bus and Tram objects
+                              ),
                               
-                          active = list(
+                              active = list(
+                                #' @field fleet_size Read-only. Returns the current number of vehicles in the network.
                                 fleet_size = function(value) {
                                   if (!missing(value)) stop("Error: fleet_size is read-only.")
                                   return(length(private$.fleet))
                                 }
                               ),
                               
-                          public = list(
+                              public = list(
+                                #' @description Create a new TransitNetwork object
+                                #' @return A new `TransitNetwork` object.
                                 initialize = function() {
                                   private$.fleet <- list()
                                 },
                                 
                                 #' @description Update the fleet with fresh API data
                                 #' @param api_data A data frame returned by your API fetcher
-                                #' @param vechicle_type An integer: 1 for buses, 2 for trams.
+                                #' @param vehicle_type An integer: 1 for buses, 2 for trams.
+                                #' @return Invisibly returns the `TransitNetwork` object for chaining.
                                 update_fleet = function(api_data, vehicle_type) {
                                   if (!is.data.frame(api_data) || nrow(api_data) == 0) return(invisible(self))
                                   if (!vehicle_type %in% c(1, 2)) stop("vehicle_type must be 1 (buses) or 2 (trams).")
@@ -47,6 +51,7 @@ TransitNetwork <- R6::R6Class("TransitNetwork",
                                 #' @description Apply a disruption to all vehicles on affected lines
                                 #' @param affected_lines A character vector of route_short_name values
                                 #' @param disruption_type A string: "traffic", "track_blockage", or "both"
+                                #' @return Invisibly returns the `TransitNetwork` object for chaining.
                                 apply_disruption = function(affected_lines, disruption_type) {
                                   if (!is.character(affected_lines)) {
                                     stop("affected_lines must be a character vector.")
@@ -56,14 +61,13 @@ TransitNetwork <- R6::R6Class("TransitNetwork",
                                   }
                                   
                                   lapply(private$.fleet, function(vehicle) {
-                                    # Thanks to polymorphism, both Bus and Tram now accept the same arguments 
-                                    # and internally decide whether they care about the disruption type.
                                     vehicle$check_disruption(affected_lines, disruption_type)
                                   })
                                   invisible(self)
                                 },
                                 
                                 #' @description Reset all vehicles in the fleet to non-delayed status
+                                #' @return Invisibly returns the `TransitNetwork` object for chaining.
                                 reset_disruptions = function() {
                                   lapply(private$.fleet, function(vehicle) {
                                     vehicle$clear_delay()
@@ -99,4 +103,3 @@ TransitNetwork <- R6::R6Class("TransitNetwork",
                                 }
                               )
 )
-
