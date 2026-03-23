@@ -1,9 +1,21 @@
 #' Clean stale vehicle data based on timestamp
 #'
-#' @param df A data frame returned by fetch_warsaw_transit()
+#' @description Filters out vehicle locations older than a specified number of minutes
+#'   by comparing the `Time` column in the API data to the current system time.
+#'   This ensures the map only displays active vehicles.
+#'
+#' @param df A data frame returned by fetch_warsaw_transit(). Must contain a "Time" column.
 #' @param max_age_mins Maximum allowed age of the data point in minutes. Default is 10.
-#' @return A cleaned data frame with only recently updated vehicles.
+#' @return A cleaned data frame with only recently updated vehicles. Returns the original 
+#'   data frame if it is empty or missing the "Time" column.
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#'   live_data <- fetch_warsaw_transit(api_key = "YOUR_API_KEY", vehicle_type = 1)
+#'   # Keep only buses updated in the last 5 minutes
+#'   fresh_buses <- clean_stale_data(live_data, max_age_mins = 5)
+#' }
 clean_stale_data <- function(df, max_age_mins = 10) {
   if (nrow(df) == 0 || !"Time" %in% colnames(df)) return(df)
   
@@ -38,10 +50,10 @@ clean_stale_data <- function(df, max_age_mins = 10) {
 #'
 #' @examples
 #' \dontrun{
-#'   # Create a n-meter buffer (5 meters default) around a point in central Warsaw
-#'   danger_zone <- create_disruption_buffer(lon = 21.0122, lat = 52.2297, radius_m = 5)
+#'   # Create a n-meter buffer (15 meters default) around a point in central Warsaw
+#'   danger_zone <- create_disruption_buffer(lon = 21.0122, lat = 52.2297, radius_m = 15)
 #' }
-create_disruption_buffer <- function(lon, lat, radius_m = 5) {
+create_disruption_buffer <- function(lon, lat, radius_m = 15) {
   
   if (!is.numeric(lon) || lon < -180 || lon > 180) {
     stop("Error: 'lon' must be a valid numeric longitude between -180 and 180.")

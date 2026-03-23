@@ -2,9 +2,16 @@
 % Please edit documentation in R/class_Network.R
 \name{TransitNetwork}
 \alias{TransitNetwork}
-\title{R6 Class Representing the Transit Network Manager}
+\title{Transit Network Manager}
 \description{
 Manages a fleet of Bus and Tram objects and handles global spatial updates.
+}
+\section{Active bindings}{
+\if{html}{\out{<div class="r6-active-bindings">}}
+\describe{
+\item{\code{fleet_size}}{Read-only. Returns the current number of vehicles in the network.}
+}
+\if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -21,10 +28,14 @@ Manages a fleet of Bus and Tram objects and handles global spatial updates.
 \if{html}{\out{<a id="method-TransitNetwork-new"></a>}}
 \if{latex}{\out{\hypertarget{method-TransitNetwork-new}{}}}
 \subsection{Method \code{new()}}{
+Create a new TransitNetwork object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{TransitNetwork$new()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+A new \code{TransitNetwork} object.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-TransitNetwork-update_fleet"></a>}}
@@ -40,9 +51,12 @@ Update the fleet with fresh API data
 \describe{
 \item{\code{api_data}}{A data frame returned by your API fetcher}
 
-\item{\code{vechicle_type}}{An integer: 1 for buses, 2 for trams.}
+\item{\code{vehicle_type}}{An integer: 1 for buses, 2 for trams.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Invisibly returns the \code{TransitNetwork} object for chaining.
 }
 }
 \if{html}{\out{<hr>}}
@@ -59,9 +73,12 @@ Apply a disruption to all vehicles on affected lines
 \describe{
 \item{\code{affected_lines}}{A character vector of route_short_name values}
 
-\item{\code{disruption_type}}{A string: "traffic" or "track_blockage"}
+\item{\code{disruption_type}}{A string: "traffic", "track_blockage", or "both"}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Invisibly returns the \code{TransitNetwork} object for chaining.
 }
 }
 \if{html}{\out{<hr>}}
@@ -73,6 +90,9 @@ Reset all vehicles in the fleet to non-delayed status
 \if{html}{\out{<div class="r">}}\preformatted{TransitNetwork$reset_disruptions()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+Invisibly returns the \code{TransitNetwork} object for chaining.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-TransitNetwork-get_spatial_data"></a>}}

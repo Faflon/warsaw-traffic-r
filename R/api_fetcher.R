@@ -1,10 +1,24 @@
-
 #' Fetch Live Public Transit Data from Warsaw API
 #'
-#' @param api_key A string containing your personal API key from api.um.warszawa.pl
+#' @description Fetches live GPS coordinates and metadata for buses or trams 
+#'   in Warsaw using the official UM Warszawa API. Automatically cleans stale 
+#'   data and converts coordinates to numeric format for spatial processing.
+#'
+#' @param api_key A character string containing your personal API key from api.um.warszawa.pl.
 #' @param vehicle_type An integer: 1 for buses, 2 for trams. Default is 1.
-#' @return A data frame containing the live locations and details of the vehicles.
+#' 
+#' @return A data frame containing the live locations and details of the vehicles. 
+#'   Returns an empty data frame if the connection or parsing fails.
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#'   # Fetch live bus data
+#'   buses <- fetch_warsaw_transit(api_key = "YOUR_API_KEY", vehicle_type = 1)
+#'   
+#'   # Fetch live tram data
+#'   trams <- fetch_warsaw_transit(api_key = "YOUR_API_KEY", vehicle_type = 2)
+#' }
 fetch_warsaw_transit <- function(api_key, vehicle_type = 1) {
   
   # Input Validation
@@ -22,7 +36,7 @@ fetch_warsaw_transit <- function(api_key, vehicle_type = 1) {
   
   # Safe API Call using tryCatch
   # We use a timeout so the app doesn't freeze if the server is offline
-response <- tryCatch({
+  response <- tryCatch({
     httr::GET(
       url = base_url,
       query = list(
@@ -35,21 +49,6 @@ response <- tryCatch({
   }, error = function(e) {
     message("Failed to connect to the Warsaw Transit API: ", e$message)
     return(NULL)
-  })
-
-  if (is.null(response)) return(data.frame())
-
-  if (httr::http_error(response)) {
-    warning("API returned an error. HTTP Status: ", httr::status_code(response))
-    return(data.frame())
-  }
-
-  parsed_data <- tryCatch({
-    content_text <- httr::content(response, as = "text", encoding = "UTF-8")
-    jsonlite::fromJSON(content_text, flatten = TRUE)
-  }, error = function(e) {
-    warning("Failed to parse JSON response: ", e$message)
-    return(data.frame())
   })
   
   # Handle the specific structure of the Warsaw API
@@ -74,5 +73,3 @@ response <- tryCatch({
   
   return(clean_stale_data(df))
 }
-
-

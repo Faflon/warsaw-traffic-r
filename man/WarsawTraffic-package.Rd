@@ -4,12 +4,12 @@
 \name{WarsawTraffic-package}
 \alias{WarsawTraffic}
 \alias{WarsawTraffic-package}
-\title{WarsawTraffic: What the Package Does (One Line, Title Case)}
+\title{WarsawTraffic: Sumulator of the impact of traffic disruptions on the Warsaw public transit network.}
 \description{
 What the package does (one paragraph).
 }
 \author{
-\strong{Maintainer}: First Last \email{first.last@example.com}
+\strong{Maintainer}: Adam Jaworski \email{ap.jaworski3@student.uw.edu.pl}
 
 }
 \keyword{internal}
