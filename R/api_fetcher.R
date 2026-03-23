@@ -52,24 +52,6 @@ response <- tryCatch({
     return(data.frame())
   })
   
-  # If the connection completely failed, return an empty data frame
-  if (is.null(response)) return(data.frame())
-  
-  # Check HTTP Status
-  if (httr::http_error(response)) {
-    warning("API returned an error. HTTP Status: ", httr::status_code(response))
-    return(data.frame())
-  }
-  
-  # Parse the JSON
-  parsed_data <- tryCatch({
-    content_text <- httr::content(response, as = "text", encoding = "UTF-8")
-    jsonlite::fromJSON(content_text, flatten = TRUE)
-  }, error = function(e) {
-    warning("Failed to parse JSON response: ", e$message)
-    return(data.frame())
-  })
-  
   # Handle the specific structure of the Warsaw API
   # The Warsaw API returns errors as a string inside the 'result' field, rather than a standard HTTP error.
   if (!"result" %in% names(parsed_data)) {
