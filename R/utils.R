@@ -23,3 +23,94 @@ clean_stale_data <- function(df, max_age_mins = 10) {
   
   return(cleaned_df)
 }
+
+#' Create a Spatial Buffer for a Disruption
+#'
+#' @description Takes a raw GPS coordinate (longitude and latitude), converts it 
+#' into a spatial point, projects it to the metric Polish coordinate system (EPSG:2180), 
+#' and draws a circular buffer around it.
+#'
+#' @param lon A numeric value representing longitude (must be between -180 and 180).
+#' @param lat A numeric value representing latitude (must be between -90 and 90).
+#' @param radius_m A positive numeric value representing the buffer radius in meters. Default is 5.
+#' @return An `sfc` polygon object in EPSG:2180 projection representing the disruption zone.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#'   # Create a n-meter buffer (5 meters default) around a point in central Warsaw
+#'   danger_zone <- create_disruption_buffer(lon = 21.0122, lat = 52.2297, radius_m = 5)
+#' }
+create_disruption_buffer <- function(lon, lat, radius_m = 5) {
+  
+  if (!is.numeric(lon) || lon < -180 || lon > 180) {
+    stop("Error: 'lon' must be a valid numeric longitude between -180 and 180.")
+  }
+  
+  if (!is.numeric(lat) || lat < -90 || lat > 90) {
+    stop("Error: 'lat' must be a valid numeric latitude between -90 and 90.")
+  }
+  
+  if (!is.numeric(radius_m) || radius_m <= 0) {
+    stop("Error: 'radius_m' must be a positive number.")
+  }
+  
+  if (lon < 14.1 || lon > 24.1 || lat < 49.0 || lat > 54.8) {
+    warning("Warning: The provided coordinates appear to be outside of Poland. Projection EPSG:2180 may yield distorted results. If you are using data from different area, please change projection.")
+  }
+
+  buffer_polygon <- sf::st_point(c(lon, lat)) |>
+    sf::st_sfc(crs = 4326) |> # Add the WGS84 coordinate reference system (standard GPS)
+    sf::st_transform(crs = 2180) |>
+    sf::st_buffer(dist = radius_m)
+  
+  return(buffer_polygon)
+}
+
+#' Find Transit Lines Affected by a Disruption Buffer
+#'
+#' @description Takes a spatial polygon representing a disruption zone and checks
+#' it against a spatial dataset of transit routes. Identifies which specific 
+#' routes cross into the buffer.
+#'
+#' @param buffer_polygon An `sf` or `sfc` polygon object representing the danger zone.
+#' @param route_shapes An `sf` object containing the transit polylines, which must include a `route_short_name` column.
+#' @return A character vector of unique `route_short_name`s affected by the disruption. Returns `character(0)` if none.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#'   routes <- readRDS("data/warsaw_routes.rds")
+#'   danger_zone <- create_disruption_buffer(lon = 21.0122, lat = 52.2297, radius_m = 5)
+#'   affected_lines <- find_affected_lines(danger_zone, routes)
+#' }
+find_affected_lines <- function(buffer_polygon, route_shapes) {
+  
+  if (!inherits(buffer_polygon, c("sf", "sfc"))) {
+    stop("Error: 'buffer_polygon' must be an sf or sfc spatial object.")
+  }
+  
+  if (!inherits(route_shapes, "sf")) {
+    stop("Error: 'route_shapes' must be an sf spatial object.")
+  }
+  
+  if (!"route_short_name" %in% colnames(route_shapes)) {
+    stop("Error: 'route_shapes' must contain a 'route_short_name' column.")
+  }
+  
+  # Perform the Mathematical Spatial Intersection
+  # Setting sparse = FALSE returns a standard dense logical matrix (TRUE/FALSE) making it much easier to subset the data.
+  intersection_matrix <- sf::st_intersects(route_shapes, buffer_polygon, sparse = FALSE)
+  
+  # Extract the row indices where an intersection occurred - intersection_matrix has rows for routes, and 1 column for the single buffer
+  affected_indices <- which(intersection_matrix[, 1])
+  
+  if (length(affected_indices) == 0) { #handling empty results
+    return(character(0))
+  }
+  
+  # Extract Unique Route Names
+  affected_routes <- unique(as.character(route_shapes$route_short_name[affected_indices]))
+  
+  return(affected_routes)
+}

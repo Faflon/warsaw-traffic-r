@@ -46,21 +46,19 @@ TransitNetwork <- R6::R6Class("TransitNetwork",
                                 
                                 #' @description Apply a disruption to all vehicles on affected lines
                                 #' @param affected_lines A character vector of route_short_name values
-                                #' @param disruption_type A string: "traffic" or "track_blockage"
+                                #' @param disruption_type A string: "traffic", "track_blockage", or "both"
                                 apply_disruption = function(affected_lines, disruption_type) {
                                   if (!is.character(affected_lines)) {
                                     stop("affected_lines must be a character vector.")
                                   }
-                                  if (!disruption_type %in% c("traffic", "track_blockage")) {
-                                    stop("disruption_type must be 'traffic' or 'track_blockage'.")
+                                  if (!disruption_type %in% c("traffic", "track_blockage", "both")) {
+                                    stop("disruption_type must be 'traffic', 'track_blockage', or 'both'.")
                                   }
                                   
                                   lapply(private$.fleet, function(vehicle) {
-                                    if (inherits(vehicle, "Tram")) {
-                                      vehicle$check_disruption(affected_lines, disruption_type)
-                                    } else {
-                                      vehicle$check_disruption(affected_lines)
-                                    }
+                                    # Thanks to polymorphism, both Bus and Tram now accept the same arguments 
+                                    # and internally decide whether they care about the disruption type.
+                                    vehicle$check_disruption(affected_lines, disruption_type)
                                   })
                                   invisible(self)
                                 },
@@ -101,3 +99,4 @@ TransitNetwork <- R6::R6Class("TransitNetwork",
                                 }
                               )
 )
+

@@ -39,6 +39,7 @@ Vehicle <- R6::R6Class("Vehicle",
                          }
                        ),
                        public = list(
+                         #' @description Initialize the vehicle
                          initialize = function(id, line, lon, lat, last_update) {
                            if (missing(id) || missing(line)) stop("Vehicle ID and Line are required.")
                            private$.id <- as.character(id)
@@ -78,10 +79,20 @@ Bus <- R6::R6Class("Bus",
                      
                      #' @description Check if this bus is on an affected line and flag it as delayed
                      #' @param affected_lines A character vector of route_short_name values affected by the disruption
-                     check_disruption = function(affected_lines) {
+                     #' @param disruption_type A string: "traffic", "track_blockage", or "both"
+                     check_disruption = function(affected_lines, disruption_type) {
                        if (!is.character(affected_lines)) {
                          stop("affected_lines must be a character vector of line names.")
                        }
+                       if (!disruption_type %in% c("traffic", "track_blockage", "both")) {
+                         stop("disruption_type must be 'traffic', 'track_blockage', or 'both'.")
+                       }
+                       
+                       # Buses are immune to track-only blockages
+                       if (disruption_type == "track_blockage") {
+                         return(invisible(self))
+                       }
+                       
                        if (self$line %in% affected_lines) {
                          private$.is_delayed <- TRUE
                        }
@@ -124,13 +135,13 @@ Tram <- R6::R6Class("Tram",
                       
                       #' @description Check if this tram is affected by a disruption
                       #' @param affected_lines A character vector of route_short_name values affected
-                      #' @param disruption_type A string: "traffic" or "track_blockage"
+                      #' @param disruption_type A string: "traffic", "track_blockage", or "both"
                       check_disruption = function(affected_lines, disruption_type) {
                         if (!is.character(affected_lines)) {
                           stop("affected_lines must be a character vector of line names.")
                         }
-                        if (!disruption_type %in% c("traffic", "track_blockage")) {
-                          stop("disruption_type must be 'traffic' or 'track_blockage'.")
+                        if (!disruption_type %in% c("traffic", "track_blockage", "both")) {
+                          stop("disruption_type must be 'traffic', 'track_blockage', or 'both'.")
                         }
                         
                         # Trams run on dedicated rails — road traffic does not affect them
@@ -138,7 +149,7 @@ Tram <- R6::R6Class("Tram",
                           return(invisible(self))
                         }
                         
-                        # Track blockage: flag as both delayed and blocked if line is affected
+                        # Track blockage or both: flag as delayed and blocked if line is affected
                         if (self$line %in% affected_lines) {
                           private$.is_delayed <- TRUE
                           private$.is_blocked <- TRUE
