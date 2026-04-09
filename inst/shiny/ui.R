@@ -22,8 +22,9 @@ shiny::fluidPage(
         "disruption_type",
         label = "Disruption type",
         choices = c(
-          "Road traffic (affects buses only)" = "traffic",
-          "Track blockage (affects trams only)" = "track_blockage"
+          "Road traffic (buses only)"     = "traffic",
+          "Track blockage (trams only)"   = "track_blockage",
+          "Both (affects all vehicles)"   = "both"
         ),
         selected = "traffic"
       ),
@@ -31,6 +32,16 @@ shiny::fluidPage(
         "Click anywhere on the map to drop a disruption pin.",
         "Buses ignore track blockages. Trams ignore road traffic."
       ),
+      shiny::sliderInput(
+        "radius_m",
+        label = "Disruption radius (metres)",
+        min   = 5,
+        max   = 500,
+        value = 25,
+        step  = 5,
+        post  = " m"
+      ),
+      
       shiny::actionButton(
         "clear_btn",
         "Clear disruptions",
