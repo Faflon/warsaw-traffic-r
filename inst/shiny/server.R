@@ -36,14 +36,18 @@ server <- function(input, output, session) {
     shiny::tags$div(
       shiny::tags$p(
         shiny::tags$span("\u25CF", style = "color: #2ecc71; font-size: 16px;"),
-        " On time"
+        " Bus on time"
+      ),
+      shiny::tags$p(
+        shiny::tags$span("\u25CB", style = "color: #2ecc71; font-size: 16px;"),
+        " Tram on time"
       ),
       shiny::tags$p(
         shiny::tags$span("\u25CF", style = "color: #e67e22; font-size: 16px;"),
         " Bus delayed"
       ),
       shiny::tags$p(
-        shiny::tags$span("\u25CF", style = "color: #e74c3c; font-size: 16px;"),
+        shiny::tags$span("\u25CB", style = "color: #e74c3c; font-size: 16px;"),
         " Tram blocked"
       )
     )
@@ -113,20 +117,48 @@ server <- function(input, output, session) {
       )
     )
     
-    leaflet::leafletProxy("map") |>
-      leaflet::clearGroup("vehicles") |>
-      leaflet::addCircleMarkers(
-        lng    = vd$lng,
-        lat    = vd$lat_coord,
-        color  = vd$color,
-        fill   = TRUE,
-        fillColor = vd$color,
-        fillOpacity = 0.9,
-        radius = 6,
-        stroke = FALSE,
-        popup  = vd$popup,
-        group  = "vehicles"
-      )
+    # Split into buses and trams for different visual styles
+    buses <- vd[vd$vehicle_type == "bus",  ]
+    trams <- vd[vd$vehicle_type == "tram", ]
+    
+    proxy <- leaflet::leafletProxy("map") |>
+      leaflet::clearGroup("vehicles")
+    
+    # Buses: solid filled circles
+    if (nrow(buses) > 0) {
+      proxy <- proxy |>
+        leaflet::addCircleMarkers(
+          lng         = buses$lng,
+          lat         = buses$lat_coord,
+          color       = buses$color,
+          fill        = TRUE,
+          fillColor   = buses$color,
+          fillOpacity = 0.9,
+          radius      = 6,
+          stroke      = FALSE,
+          popup       = buses$popup,
+          group       = "vehicles"
+        )
+    }
+    
+    # Trams: outlined rings (stroke only, transparent fill)
+    if (nrow(trams) > 0) {
+      proxy <- proxy |>
+        leaflet::addCircleMarkers(
+          lng         = trams$lng,
+          lat         = trams$lat_coord,
+          color       = trams$color,
+          fill        = TRUE,
+          fillColor   = trams$color,
+          fillOpacity = 0.15,
+          radius      = 7,
+          stroke      = TRUE,
+          weight      = 2.5,
+          opacity     = 1,
+          popup       = trams$popup,
+          group       = "vehicles"
+        )
+    }
   })
   
   # --- Clear button handler ---
