@@ -51,8 +51,27 @@ fetch_warsaw_transit <- function(api_key, vehicle_type = 1) {
     return(NULL)
   })
   
+  # If the request failed entirely (e.g. timeout, no connection), return early
+  if (is.null(response)) {
+    return(data.frame())
+  }
+  
+  # Parse the raw JSON response body into an R list
+  parsed_data <- tryCatch({
+    raw_text <- httr::content(response, as = "text", encoding = "UTF-8")
+    jsonlite::fromJSON(raw_text, flatten = TRUE)
+  }, error = function(e) {
+    warning("Failed to parse API response: ", e$message)
+    return(NULL)
+  })
+  
+  if (is.null(parsed_data)) {
+    return(data.frame())
+  }
+  
   # Handle the specific structure of the Warsaw API
-  # The Warsaw API returns errors as a string inside the 'result' field, rather than a standard HTTP error.
+  # The Warsaw API returns errors as a string inside the 'result' field,
+  # rather than a standard HTTP error code.
   if (!"result" %in% names(parsed_data)) {
     warning("Unexpected API response structure.")
     return(data.frame())
@@ -66,7 +85,7 @@ fetch_warsaw_transit <- function(api_key, vehicle_type = 1) {
   df <- as.data.frame(parsed_data$result)
   
   # Convert lat/lon from characters to numeric for future spatial calculations
-  if("Lat" %in% colnames(df) && "Lon" %in% colnames(df)) {
+  if ("Lat" %in% colnames(df) && "Lon" %in% colnames(df)) {
     df$Lat <- as.numeric(df$Lat)
     df$Lon <- as.numeric(df$Lon)
   }
