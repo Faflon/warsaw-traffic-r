@@ -3,7 +3,7 @@ Title: Simulator of the impact of traffic disruptions on the Warsaw public trans
 Version: 0.0.0.9000
 Authors@R: 
     c(person("Adam", "Jaworski", email = "ap.jaworski3@student.uw.edu.pl", role = c("aut", "cre")),
-      person("Natalia", "Namysłowska", email = "n.namyslowsk@student.uw.edu.pl", role = c("aut", "cre")))
+      person("Natalia", "Namysłowska", email = "n.namyslowsk@student.uw.edu.pl", role = c("aut")))
 Description: WarsawTraffic provides tools to simulate the real-time impact of
     traffic and infrastructure disruptions on the Warsaw public transit network.
     Users can fetch live GPS positions for buses and trams from the Warsaw Open

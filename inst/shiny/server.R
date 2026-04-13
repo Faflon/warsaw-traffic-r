@@ -1,111 +1,71 @@
 server <- function(input, output, session) {
   
-  # --- Startup ---
-  # Load pre-processed route shapes once when the app starts
+  # loading route shapes only once when the app starts, not on every click
   route_shapes <- tryCatch({
     path <- file.path(system.file(package = "WarsawTraffic"), "..", "data", "warsaw_routes.rds")
     readRDS(normalizePath(path))
   }, error = function(e) {
-    message("Failed to load route shapes: ", e$message)
+    message("Could not load route shapes: ", e$message)
     NULL
   })
   
-  # Create the TransitNetwork fleet manager
   network <- TransitNetwork$new()
-  
-  # Reactive value holding current vehicle sf data (NULL until first fetch)
   vehicle_data <- shiny::reactiveVal(NULL)
+  status_msg <- shiny::reactiveVal("Ready. Fetch vehicles to begin.")
   
-  # Reactive value holding current disruption pin coordinates
-  disruption_pin <- shiny::reactiveVal(NULL)
-  
-  status_msg <- shiny::reactiveVal("No vehicles loaded. Click 'Fetch vehicles' to begin.")
-  
-  # --- Initial map ---
+  # base map rendered once
   output$map <- leaflet::renderLeaflet({
     leaflet::leaflet() |>
       leaflet::addTiles() |>
       leaflet::setView(lng = 21.01, lat = 52.23, zoom = 12)
   })
   
-  # --- Status text (single definition, driven by status_msg reactive) ---
   output$status_text <- shiny::renderText({ status_msg() })
   
-  # --- Legend ---
-  output$legend <- shiny::renderUI({
-    shiny::tags$div(
-      shiny::tags$p(
-        shiny::tags$span("\u25CF", style = "color: #2ecc71; font-size: 16px;"),
-        " Bus on time"
-      ),
-      shiny::tags$p(
-        shiny::tags$span("\u25CB", style = "color: #2ecc71; font-size: 16px;"),
-        " Tram on time"
-      ),
-      shiny::tags$p(
-        shiny::tags$span("\u25CF", style = "color: #e67e22; font-size: 16px;"),
-        " Bus delayed"
-      ),
-      shiny::tags$p(
-        shiny::tags$span("\u25CB", style = "color: #e74c3c; font-size: 16px;"),
-        " Tram blocked"
-      )
-    )
-  })
-  
-  # --- Fetch button handler ---
+  # fetch button pulls live bus and tram positions from the API
   shiny::observeEvent(input$fetch_btn, {
-    
     api_key <- Sys.getenv("WARSAW_API_KEY")
-    
-    if (api_key == "") {
-      status_msg("Error: WARSAW_API_KEY not found in .Renviron. Please add it and restart R.")
+    if (nchar(api_key) == 0) {
+      status_msg("Error: WARSAW_API_KEY not set. Add it to .Renviron and restart R.")
       return()
     }
     
     status_msg("Fetching vehicles...")
     
     result <- tryCatch({
-      
       buses <- fetch_warsaw_transit(api_key, vehicle_type = 1)
       trams <- fetch_warsaw_transit(api_key, vehicle_type = 2)
-      
       if (nrow(buses) > 0) network$update_fleet(buses, vehicle_type = 1)
       if (nrow(trams) > 0) network$update_fleet(trams, vehicle_type = 2)
-      
       network$get_spatial_data()
-      
     }, error = function(e) {
-      status_msg(paste("Error fetching data:", conditionMessage(e)))
-      return(NULL)
+      status_msg(paste("Fetch error:", conditionMessage(e)))
+      NULL
     })
     
     if (!is.null(result)) {
       vehicle_data(result)
-      n_delayed <- sum(result$is_delayed, na.rm = TRUE)
-      status_msg(paste0(
-        network$fleet_size, " vehicles loaded. ",
-        n_delayed, " delayed or blocked."
-      ))
+      status_msg(paste0(network$fleet_size, " vehicles loaded. No disruptions active."))
     }
   })
   
-  # --- Map rendering observer (fires whenever vehicle_data changes) ---
+  # redraw markers when vehicle data changes after fetch and after each disruption click
   shiny::observe({
     shiny::req(vehicle_data())
     vd <- vehicle_data()
+    
+    # sf objects store coordinates in geometry, we pull them out into plain columns
     coords <- sf::st_coordinates(vd)
     vd$lng <- coords[, 1]
     vd$lat_coord <- coords[, 2]
     
-    # Assign color per vehicle status
+    # color depends on vehicle type and current status
     vd$color <- dplyr::case_when(
-      vd$vehicle_type == "tram" & vd$is_blocked ~ "#e74c3c",
-      vd$vehicle_type == "bus"  & vd$is_delayed ~ "#e67e22",
+      vd$vehicle_type == "tram" & vd$is_blocked ~ "red",
+      vd$vehicle_type == "bus"  & vd$is_delayed ~ "orange",
       TRUE ~ "#2ecc71"
     )
     
-    # Build popup text
     vd$popup <- paste0(
       "<b>Line:</b> ", vd$line, "<br>",
       "<b>ID:</b> ", vd$id, "<br>",
@@ -117,135 +77,109 @@ server <- function(input, output, session) {
       )
     )
     
-    # Split into buses and trams for different visual styles
-    buses <- vd[vd$vehicle_type == "bus",  ]
+    buses <- vd[vd$vehicle_type == "bus", ]
     trams <- vd[vd$vehicle_type == "tram", ]
     
-    proxy <- leaflet::leafletProxy("map") |>
-      leaflet::clearGroup("vehicles")
+    proxy <- leaflet::leafletProxy("map") |> leaflet::clearGroup("vehicles")
     
-    # Buses: solid filled circles
+    # buses drawn as solid filled circles
     if (nrow(buses) > 0) {
-      proxy <- proxy |>
-        leaflet::addCircleMarkers(
-          lng         = buses$lng,
-          lat         = buses$lat_coord,
-          color       = buses$color,
-          fill        = TRUE,
-          fillColor   = buses$color,
-          fillOpacity = 0.9,
-          radius      = 6,
-          stroke      = FALSE,
-          popup       = buses$popup,
-          group       = "vehicles"
-        )
+      proxy <- leaflet::addCircleMarkers(proxy,
+                                         lng = buses$lng, lat = buses$lat_coord,
+                                         color = buses$color, fillColor = buses$color,
+                                         fillOpacity = 0.9, radius = 6, stroke = FALSE,
+                                         popup = buses$popup, group = "vehicles"
+      )
     }
     
-    # Trams: outlined rings (stroke only, transparent fill)
+    # trams drawn as outlined rings
     if (nrow(trams) > 0) {
-      proxy <- proxy |>
-        leaflet::addCircleMarkers(
-          lng         = trams$lng,
-          lat         = trams$lat_coord,
-          color       = trams$color,
-          fill        = TRUE,
-          fillColor   = trams$color,
-          fillOpacity = 0.15,
-          radius      = 7,
-          stroke      = TRUE,
-          weight      = 2.5,
-          opacity     = 1,
-          popup       = trams$popup,
-          group       = "vehicles"
-        )
+      proxy <- leaflet::addCircleMarkers(proxy,
+                                         lng = trams$lng, lat = trams$lat_coord,
+                                         color = trams$color, fillColor = trams$color,
+                                         fillOpacity = 0.15, radius = 7, stroke = TRUE, weight = 2.5,
+                                         popup = trams$popup, group = "vehicles"
+      )
     }
   })
   
-  # --- Clear button handler ---
+  # clear button resets all vehicle states and removes the disruption pin
   shiny::observeEvent(input$clear_btn, {
     network$reset_disruptions()
-    disruption_pin(NULL)
     vehicle_data(network$get_spatial_data())
-    
-    leaflet::leafletProxy("map") |>
-      leaflet::clearGroup("disruption_pin")
-    
-    status_msg(paste0(network$fleet_size, " vehicles loaded. 0 delayed or blocked."))
+    leaflet::leafletProxy("map") |> leaflet::clearGroup("disruption_pin")
+    status_msg(paste0(network$fleet_size, " vehicles loaded. No disruptions active."))
   })
   
-  # --- Map click handler (disruption pin) ---
+  # map click places a disruption pin and figures out which lines are affected
   shiny::observeEvent(input$map_click, {
-    
-    # Do nothing if no route shapes loaded
     if (is.null(route_shapes)) {
-      status_msg("Error: Route shapes not loaded. Run build_route_shapes() first.")
+      status_msg("Route shapes not loaded. Run build_route_shapes() first.")
       return()
     }
     
     click <- input$map_click
     
-    # Create the spatial buffer around the clicked point
     buffer <- tryCatch(
-      create_disruption_buffer(lon = click$lng, lat = click$lat, radius_m = input$radius_m),
+      create_disruption_buffer(click$lng, click$lat, input$radius_m),
       error = function(e) {
-        status_msg(paste("Error creating buffer:", conditionMessage(e)))
-        return(NULL)
+        status_msg(paste("Buffer error:", conditionMessage(e)))
+        NULL
       }
     )
-    
     if (is.null(buffer)) return()
     
-    # Find which lines pass through the disruption zone
-    affected <- find_affected_lines(buffer, route_shapes)
+    # find all lines crossing the buffer, filtering by disruption type happens inside the R6 classes
+    geom_lines <- find_affected_lines(buffer, route_shapes)
     
-    # Draw the pin AFTER affected is known so popup can reference it
-    leaflet::leafletProxy("map") |>
-      leaflet::clearGroup("disruption_pin") |>
-      leaflet::addCircles(
-        lng         = click$lng,
-        lat         = click$lat,
-        radius      = input$radius_m,
-        color       = "#2c3e50",
-        fill        = TRUE,
-        fillColor   = "#2c3e50",
-        fillOpacity = 0.15,
-        weight      = 2,
-        opacity     = 0.8,
-        group       = "disruption_pin",
-        popup       = paste0(
-          "<b>Disruption</b><br>",
-          "Type: ", input$disruption_type, "<br>",
-          "Radius: ", input$radius_m, "m<br>",
-          if (length(affected) > 0)
-            paste("Affected lines:", paste(sort(affected), collapse = ", "))
-          else
-            "No routes affected"
+    if (length(geom_lines) == 0) {
+      leaflet::leafletProxy("map") |>
+        leaflet::clearGroup("disruption_pin") |>
+        leaflet::addCircles(
+          lng = click$lng, lat = click$lat,
+          radius = input$radius_m,
+          color = "#2c3e50", fillColor = "#2c3e50",
+          fillOpacity = 0.15, weight = 2, opacity = 0.8,
+          group = "disruption_pin",
+          popup = "No routes in this area."
         )
-      )
-    
-    if (length(affected) == 0) {
-      status_msg("No transit routes pass through this area. Try clicking on a road or track.")
+      status_msg("No routes pass through here. Try clicking on a road or tram track.")
       return()
     }
     
-    # Reset previous disruptions before applying new ones
+    # reset so that delays from the previous click don't carry over
     network$reset_disruptions()
-    
-    # Apply disruption to the fleet
-    network$apply_disruption(affected, input$disruption_type)
-    
-    # Update reactive vehicle data
+    network$apply_disruption(geom_lines, input$disruption_type)
     vehicle_data(network$get_spatial_data())
     
-    # Store pin location
-    disruption_pin(list(lng = click$lng, lat = click$lat))
+    # get lines that are actually disrupted, not just geometrically in the buffer, differs for trams and buses
+    vd <- vehicle_data()
+    actually_affected <- sort(unique(vd$line[vd$is_delayed | vd$is_blocked]))
     
-    # Update status
-    n_delayed <- if (!is.null(vehicle_data())) sum(vehicle_data()$is_delayed, na.rm = TRUE) else 0
+    leaflet::leafletProxy("map") |>
+      leaflet::clearGroup("disruption_pin") |>
+      leaflet::addCircles(
+        lng = click$lng, lat = click$lat,
+        radius = input$radius_m,
+        color = "#2c3e50", fillColor = "#2c3e50",
+        fillOpacity = 0.15, weight = 2, opacity = 0.8,
+        group = "disruption_pin",
+        popup = paste0(
+          "<b>Disruption pin</b><br>",
+          "Type: ", input$disruption_type, "<br>",
+          "Radius: ", input$radius_m, " m<br>",
+          if (length(actually_affected) > 0)
+            paste("Affected lines:", paste(actually_affected, collapse = ", "))
+          else
+            "No vehicles affected."
+        )
+      )
+    
+    n_delayed <- sum(vd$is_delayed, na.rm = TRUE)
     status_msg(paste0(
       network$fleet_size, " vehicles loaded. ",
-      n_delayed, " delayed or blocked. ",
-      "Lines affected: ", paste(sort(affected), collapse = ", ")
+      n_delayed, " delayed/blocked. Lines: ",
+      if (length(actually_affected) > 0) paste(actually_affected, collapse = ", ") else "none"
     ))
   })
 }

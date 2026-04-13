@@ -69,7 +69,7 @@ and saves them as `data/warsaw_routes.rds` inside the package:
 ``` r
 library(WarsawTraffic)
 
-preprocess_gtfs(gtfs_dir = "path/to/your/gtfs/folder")
+build_route_shapes(gtfs_dir = "path/to/your/gtfs/folder")
 ```
 
 This step only needs to be repeated when you download a new GTFS feed.
@@ -90,13 +90,14 @@ WarsawTraffic::run_app()
 
 **Fetch vehicles** — click the “Fetch vehicles” button to pull live GPS
 positions for all active buses and trams from the Warsaw API. Vehicles
-appear as colored circles on the map. Green means on time.
+appear as markers on the map: buses as solid filled circles, trams as
+outlined rings. Green means on time.
 
 **Drop a disruption pin** — select a disruption type (road traffic or
 track blockage), then click anywhere on the map. The tool creates a
-5-metre spatial buffer around the click point, checks it against all
-pre-loaded route geometries, and identifies every line whose path passes
-through the disrupted area.
+spatial buffer around the click point, checks it against all pre-loaded
+route geometries, and identifies every line whose path passes through
+the disrupted area.
 
 - Buses on affected lines turn **orange** (delayed). Buses react to road
   traffic disruptions only.
@@ -123,12 +124,11 @@ to on-time status and remove the disruption pin from the map.
                 └─ TransitNetwork$update_fleet()   # R6 fleet manager
 
     GTFS schedule (ZTM)
-      └─ preprocess_gtfs()               # one-time preprocessing
-           └─ build_route_shapes()       # sf LINESTRING per route, EPSG:2180
-                └─ warsaw_routes.rds     # loaded once on app startup
+      └─ build_route_shapes()            # one-time preprocessing
+           └─ data/warsaw_routes.rds     # sf LINESTRING per route, EPSG:2180, loaded once on startup
 
     User drops pin
-      └─ create_disruption_buffer()      # 5m sf polygon in EPSG:2180
+      └─ create_disruption_buffer()      # sf polygon in EPSG:2180
            └─ find_affected_lines()      # st_intersects() against route shapes
                 └─ TransitNetwork$apply_disruption()
                      ├─ Bus$check_disruption()    # flags delayed if line matches
@@ -143,9 +143,10 @@ refreshes. The class hierarchy is:
   and delay status behind read-only active bindings. The
   `check_disruption()` method is an error-throwing placeholder that
   forces use of child classes.
-- **`Bus`** (child) — overrides `check_disruption(affected_lines)`. Sets
-  delayed status if its line appears in the affected lines vector.
-  Unaffected by track blockage events.
+- **`Bus`** (child) — overrides
+  `check_disruption(affected_lines, disruption_type)`. Sets delayed
+  status if its line appears in the affected lines vector. Unaffected by
+  track blockage events.
 - **`Tram`** (child) — overrides
   `check_disruption(affected_lines, disruption_type)`. Sets blocked
   status only for track blockage events. Ignores road traffic
@@ -165,10 +166,22 @@ This projection is required so that buffer distances are computed in
 metres rather than degrees.
 
 When a disruption pin is dropped, `sf::st_intersects()` checks the
-5-metre buffer polygon against all route linestrings simultaneously.
-Only routes whose physical path crosses the disrupted area are returned
-as affected — a crash on a highway does not flag a bus running on a
-parallel local road.
+buffer polygon against all route linestrings simultaneously. Only routes
+whose physical path crosses the disrupted area are returned as affected
+— a crash on a highway does not flag a bus running on a parallel local
+road.
+
+------------------------------------------------------------------------
+
+## Known limitations
+
+- **Line-level flagging affects both directions** — the live API
+  provides only a line name, not trip direction. Both directions of a
+  line are flagged when either is affected. This is a deliberate
+  simplification given the available data.
+- **Stale GPS positions** — the API occasionally returns vehicles with
+  frozen last-known coordinates. `clean_stale_data()` mitigates this
+  with a 10-minute cutoff.
 
 ------------------------------------------------------------------------
 
@@ -187,9 +200,9 @@ parallel local road.
 
 ## Authors
 
-- \[Your Name\] — \[Student ID\] — R package structure, GTFS
-  preprocessing, API fetcher, disruption engine
-- \[Partner Name\] — \[Student ID\] — R6 class architecture, Shiny
-  dashboard
+- Adam Jaworski — <ap.jaworski3@student.uw.edu.pl> — R package
+  structure, GTFS preprocessing, API fetcher
+- Natalia Namysłowska — <n.namyslowsk@student.uw.edu.pl> — R6 class
+  architecture, disruption engine, Shiny dashboard
 
-*Advanced Programming in R — \[Your University\], 2026*
+*Advanced Programming in R — University of Warsaw, 2026*
