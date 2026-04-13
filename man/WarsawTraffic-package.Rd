@@ -4,12 +4,17 @@
 \name{WarsawTraffic-package}
 \alias{WarsawTraffic}
 \alias{WarsawTraffic-package}
-\title{WarsawTraffic: Sumulator of the impact of traffic disruptions on the Warsaw public transit network.}
+\title{WarsawTraffic: Simulator of the impact of traffic disruptions on the Warsaw public transit network}
 \description{
-What the package does (one paragraph).
+WarsawTraffic provides tools to simulate the real-time impact of traffic and infrastructure disruptions on the Warsaw public transit network. Users can fetch live GPS positions for buses and trams from the Warsaw Open Data API, drop a disruption pin on an interactive map, and instantly see which lines are affected based on spatial intersection with pre-processed GTFS route geometries. The package implements an R6 class hierarchy (Vehicle, Bus, Tram, TransitNetwork) to manage vehicle state, and exposes a Shiny dashboard for interactive exploration of disruption scenarios.
 }
 \author{
 \strong{Maintainer}: Adam Jaworski \email{ap.jaworski3@student.uw.edu.pl}
+
+Authors:
+\itemize{
+  \item Natalia Namysłowska \email{n.namyslowsk@student.uw.edu.pl}
+}
 
 }
 \keyword{internal}

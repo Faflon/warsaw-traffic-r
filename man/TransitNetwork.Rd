@@ -2,16 +2,9 @@
 % Please edit documentation in R/class_Network.R
 \name{TransitNetwork}
 \alias{TransitNetwork}
-\title{Transit Network Manager}
+\title{Transit network manager}
 \description{
 Manages a fleet of Bus and Tram objects and handles global spatial updates.
-}
-\section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{fleet_size}}{Read-only. Returns the current number of vehicles in the network.}
-}
-\if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{

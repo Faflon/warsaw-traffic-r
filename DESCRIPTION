@@ -22,9 +22,6 @@ Imports:
     jsonlite,
     leaflet,
     R6,
-    Rcpp,
     sf,
     shiny,
     readr
-LinkingTo: 
-    Rcpp

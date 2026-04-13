@@ -4,8 +4,7 @@
 \alias{Bus}
 \title{R6 Child Class Representing a Bus}
 \description{
-Inherits from Vehicle. Flags as delayed when its line
-is affected by a road traffic disruption.
+Inherits from Vehicle. Flags as delayed when its line is affected by a road traffic disruption.
 }
 \section{Super class}{
 \code{\link[WarsawTraffic:Vehicle]{WarsawTraffic::Vehicle}} -> \code{Bus}
