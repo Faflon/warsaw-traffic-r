@@ -1,14 +1,13 @@
-#' Transit Network Manager
+#' Transit network manager
 #'
 #' @description Manages a fleet of Bus and Tram objects and handles global spatial updates.
 #' @export
 TransitNetwork <- R6::R6Class("TransitNetwork",
                               private = list(
-                                .fleet = list() #all Bus and Tram objects
+                                .fleet = list() # named list of all Bus and Tram objects, keyed by vehicle ID
                               ),
                               
                               active = list(
-                                #' @field fleet_size Read-only. Returns the current number of vehicles in the network.
                                 fleet_size = function(value) {
                                   if (!missing(value)) stop("Error: fleet_size is read-only.")
                                   return(length(private$.fleet))
@@ -35,6 +34,7 @@ TransitNetwork <- R6::R6Class("TransitNetwork",
                                     v_id <- as.character(row$VehicleNumber)
                                     line_num <- as.character(row$Lines)
                                     
+                                    # if vehicle already exists update its position, otherwise create a new object
                                     if (v_id %in% names(private$.fleet)) {
                                       private$.fleet[[v_id]]$update_location(row$Lon, row$Lat, row$Time)
                                     } else {
@@ -60,6 +60,7 @@ TransitNetwork <- R6::R6Class("TransitNetwork",
                                     stop("disruption_type must be 'traffic', 'track_blockage', or 'both'.")
                                   }
                                   
+                                  # each vehicle decides for itself if it's affected based on its type
                                   lapply(private$.fleet, function(vehicle) {
                                     vehicle$check_disruption(affected_lines, disruption_type)
                                   })
@@ -77,7 +78,7 @@ TransitNetwork <- R6::R6Class("TransitNetwork",
                                 
                                 #' @description Export the current fleet as an sf spatial object for map rendering
                                 #' @return An sf object with columns: id, line, is_delayed, is_blocked, vehicle_type, geometry.
-                                #'   Returns NULL if the fleet is empty.
+                                #' Returns NULL if the fleet is empty.
                                 get_spatial_data = function() {
                                   if (length(private$.fleet) == 0) return(NULL)
                                   
@@ -94,7 +95,7 @@ TransitNetwork <- R6::R6Class("TransitNetwork",
                                     )
                                   }))
                                   
-                                  # Drop rows where coordinates are NA (vehicles with no valid GPS fix)
+                                  # drop rows where coordinates are NA, some vehicles come from the API without a valid GPS fix
                                   df <- df[!is.na(df$lon) & !is.na(df$lat), ]
                                   
                                   if (nrow(df) == 0) return(NULL)
