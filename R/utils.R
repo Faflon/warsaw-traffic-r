@@ -44,7 +44,7 @@ clean_stale_data <- function(df, max_age_mins = 10) {
 #'
 #' @param lon A numeric value representing longitude (must be between -180 and 180).
 #' @param lat A numeric value representing latitude (must be between -90 and 90).
-#' @param radius_m A positive numeric value representing the buffer radius in meters. Default is 5.
+#' @param radius_m A positive numeric value representing the buffer radius in meters. Default is 25.
 #' @return An `sfc` polygon object in EPSG:2180 projection representing the disruption zone.
 #' @export
 #'
@@ -53,7 +53,7 @@ clean_stale_data <- function(df, max_age_mins = 10) {
 #'   # Create a n-meter buffer (15 meters default) around a point in central Warsaw
 #'   danger_zone <- create_disruption_buffer(lon = 21.0122, lat = 52.2297, radius_m = 15)
 #' }
-create_disruption_buffer <- function(lon, lat, radius_m = 15) {
+create_disruption_buffer <- function(lon, lat, radius_m = 25) {
   
   if (!is.numeric(lon) || lon < -180 || lon > 180) {
     stop("Error: 'lon' must be a valid numeric longitude between -180 and 180.")
@@ -93,7 +93,7 @@ create_disruption_buffer <- function(lon, lat, radius_m = 15) {
 #' @examples
 #' \dontrun{
 #'   routes <- readRDS("data/warsaw_routes.rds")
-#'   danger_zone <- create_disruption_buffer(lon = 21.0122, lat = 52.2297, radius_m = 5)
+#'   danger_zone <- create_disruption_buffer(lon = 21.0122, lat = 52.2297, radius_m = 15)
 #'   affected_lines <- find_affected_lines(danger_zone, routes)
 #' }
 find_affected_lines <- function(buffer_polygon, route_shapes) {

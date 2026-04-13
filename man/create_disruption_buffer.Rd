@@ -4,14 +4,14 @@
 \alias{create_disruption_buffer}
 \title{Create a Spatial Buffer for a Disruption}
 \usage{
-create_disruption_buffer(lon, lat, radius_m = 15)
+create_disruption_buffer(lon, lat, radius_m = 25)
 }
 \arguments{
 \item{lon}{A numeric value representing longitude (must be between -180 and 180).}
 
 \item{lat}{A numeric value representing latitude (must be between -90 and 90).}
 
-\item{radius_m}{A positive numeric value representing the buffer radius in meters. Default is 5.}
+\item{radius_m}{A positive numeric value representing the buffer radius in meters. Default is 25.}
 }
 \value{
 An \code{sfc} polygon object in EPSG:2180 projection representing the disruption zone.

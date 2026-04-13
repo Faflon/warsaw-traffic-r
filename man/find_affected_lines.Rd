@@ -22,7 +22,7 @@ routes cross into the buffer.
 \examples{
 \dontrun{
   routes <- readRDS("data/warsaw_routes.rds")
-  danger_zone <- create_disruption_buffer(lon = 21.0122, lat = 52.2297, radius_m = 5)
+  danger_zone <- create_disruption_buffer(lon = 21.0122, lat = 52.2297, radius_m = 15)
   affected_lines <- find_affected_lines(danger_zone, routes)
 }
 }
