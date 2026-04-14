@@ -64,7 +64,7 @@ step below.
 
 Run this once after downloading the GTFS data. It reads the schedule
 files, builds spatial route lines for all active bus and tram routes,
-and saves them as `data/warsaw_routes.rds` inside the package:
+and saves them as `inst/extdata/warsaw_routes.rds` inside the package:
 
 ``` r
 library(WarsawTraffic)
@@ -194,15 +194,15 @@ road.
 | Shiny application | `inst/shiny/ui.R`, `inst/shiny/server.R`, `run_app()` |
 | R package structure | `DESCRIPTION`, `NAMESPACE`, roxygen documentation, `man/`, `inst/` |
 | Spatial data analysis (extra) | GTFS geometry processing, CRS projection, `sf::st_intersects()`, `sf::st_buffer()` |
-| Live REST API integration (extra) | Warsaw Open Data API with timeout handling and JSON parsing |
+| Live REST API integration | Warsaw Open Data API with timeout handling and JSON parsing |
 
 ------------------------------------------------------------------------
 
 ## Authors
 
 - Adam Jaworski — <ap.jaworski3@student.uw.edu.pl> — R package
-  structure, GTFS preprocessing, API fetcher
+  structure, GTFS preprocessing, API fetcher, R6 class structure,
+  defensive programming, cross-checking
 - Natalia Namysłowska — <n.namyslowsk@student.uw.edu.pl> — R6 class
-  architecture, disruption engine, Shiny dashboard
-
-*Advanced Programming in R — University of Warsaw, 2026*
+  architecture, disruption engine, Shiny dashboard, defensive
+  programming, cross-checking
