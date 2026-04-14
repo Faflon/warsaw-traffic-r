@@ -5,7 +5,7 @@
 \title{Get Active Service ID from GTFS Calendar}
 \usage{
 get_active_service_id(
-  calendar_path = "data/gtfs/calendar.txt",
+  calendar_path = "inst/extdata/gtfs/calendar.txt",
   target_date = Sys.Date()
 )
 }
@@ -25,9 +25,9 @@ the date is out of bounds.
 \examples{
 \dontrun{
   # Check for today
-  active_services <- get_active_service_id("data/gtfs/calendar.txt")
+  active_services <- get_active_service_id("inst/extdata/gtfs/calendar.txt")
   
   # Check for a specific date
-  active_services <- get_active_service_id("data/gtfs/calendar.txt", as.Date("2026-03-25"))
+  active_services <- get_active_service_id("inst/extdata/gtfs/calendar.txt", as.Date("2026-03-25"))
 }
 }

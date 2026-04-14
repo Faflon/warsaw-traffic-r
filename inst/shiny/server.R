@@ -1,3 +1,7 @@
+library(shiny)
+library(leaflet)
+library(sf)
+library(dplyr)
 server <- function(input, output, session) {
   
   # loading route shapes only once when the app starts, not on every click
@@ -10,20 +14,20 @@ server <- function(input, output, session) {
   })
   
   network <- TransitNetwork$new()
-  vehicle_data <- shiny::reactiveVal(NULL)
-  status_msg <- shiny::reactiveVal("Ready. Fetch vehicles to begin.")
+  vehicle_data <- reactiveVal(NULL)
+  status_msg <- reactiveVal("Ready. Fetch vehicles to begin.")
   
   # base map rendered once
-  output$map <- leaflet::renderLeaflet({
-    leaflet::leaflet() |>
-      leaflet::addTiles() |>
-      leaflet::setView(lng = 21.01, lat = 52.23, zoom = 12)
+  output$map <- renderLeaflet({
+    leaflet() |>
+      addTiles() |>
+      setView(lng = 21.01, lat = 52.23, zoom = 12)
   })
   
-  output$status_text <- shiny::renderText({ status_msg() })
+  output$status_text <- renderText({ status_msg() })
   
   # fetch button pulls live bus and tram positions from the API
-  shiny::observeEvent(input$fetch_btn, {
+  observeEvent(input$fetch_btn, {
     api_key <- Sys.getenv("WARSAW_API_KEY")
     if (nchar(api_key) == 0) {
       status_msg("Error: WARSAW_API_KEY not set. Add it to .Renviron and restart R.")
@@ -50,12 +54,12 @@ server <- function(input, output, session) {
   })
   
   # redraw markers when vehicle data changes after fetch and after each disruption click
-  shiny::observe({
-    shiny::req(vehicle_data())
+  observe({
+    req(vehicle_data())
     vd <- vehicle_data()
     
     # sf objects store coordinates in geometry, we pull them out into plain columns
-    coords <- sf::st_coordinates(vd)
+    coords <- st_coordinates(vd)
     vd$lng <- coords[, 1]
     vd$lat_coord <- coords[, 2]
     
@@ -70,7 +74,7 @@ server <- function(input, output, session) {
       "<b>Line:</b> ", vd$line, "<br>",
       "<b>ID:</b> ", vd$id, "<br>",
       "<b>Type:</b> ", vd$vehicle_type, "<br>",
-      "<b>Status:</b> ", dplyr::case_when(
+      "<b>Status:</b> ", case_when(
         vd$vehicle_type == "tram" & vd$is_blocked ~ "Blocked",
         vd$vehicle_type == "bus"  & vd$is_delayed ~ "Delayed",
         TRUE ~ "On time"
@@ -80,11 +84,11 @@ server <- function(input, output, session) {
     buses <- vd[vd$vehicle_type == "bus", ]
     trams <- vd[vd$vehicle_type == "tram", ]
     
-    proxy <- leaflet::leafletProxy("map") |> leaflet::clearGroup("vehicles")
+    proxy <- leafletProxy("map") |> clearGroup("vehicles")
     
     # buses drawn as solid filled circles
     if (nrow(buses) > 0) {
-      proxy <- leaflet::addCircleMarkers(proxy,
+      proxy <- addCircleMarkers(proxy,
                                          lng = buses$lng, lat = buses$lat_coord,
                                          color = buses$color, fillColor = buses$color,
                                          fillOpacity = 0.9, radius = 6, stroke = FALSE,
@@ -94,7 +98,7 @@ server <- function(input, output, session) {
     
     # trams drawn as outlined rings
     if (nrow(trams) > 0) {
-      proxy <- leaflet::addCircleMarkers(proxy,
+      proxy <- addCircleMarkers(proxy,
                                          lng = trams$lng, lat = trams$lat_coord,
                                          color = trams$color, fillColor = trams$color,
                                          fillOpacity = 0.15, radius = 7, stroke = TRUE, weight = 2.5,
@@ -104,15 +108,15 @@ server <- function(input, output, session) {
   })
   
   # clear button resets all vehicle states and removes the disruption pin
-  shiny::observeEvent(input$clear_btn, {
+  observeEvent(input$clear_btn, {
     network$reset_disruptions()
     vehicle_data(network$get_spatial_data())
-    leaflet::leafletProxy("map") |> leaflet::clearGroup("disruption_pin")
+    leafletProxy("map") |> clearGroup("disruption_pin")
     status_msg(paste0(network$fleet_size, " vehicles loaded. No disruptions active."))
   })
   
   # map click places a disruption pin and figures out which lines are affected
-  shiny::observeEvent(input$map_click, {
+  observeEvent(input$map_click, {
     if (is.null(route_shapes)) {
       status_msg("Route shapes not loaded. Run build_route_shapes() first.")
       return()
@@ -133,9 +137,9 @@ server <- function(input, output, session) {
     geom_lines <- find_affected_lines(buffer, route_shapes)
     
     if (length(geom_lines) == 0) {
-      leaflet::leafletProxy("map") |>
-        leaflet::clearGroup("disruption_pin") |>
-        leaflet::addCircles(
+      leafletProxy("map") |>
+        clearGroup("disruption_pin") |>
+        addCircles(
           lng = click$lng, lat = click$lat,
           radius = input$radius_m,
           color = "#2c3e50", fillColor = "#2c3e50",
@@ -156,9 +160,9 @@ server <- function(input, output, session) {
     vd <- vehicle_data()
     actually_affected <- sort(unique(vd$line[vd$is_delayed | vd$is_blocked]))
     
-    leaflet::leafletProxy("map") |>
-      leaflet::clearGroup("disruption_pin") |>
-      leaflet::addCircles(
+    leafletProxy("map") |>
+      clearGroup("disruption_pin") |>
+      addCircles(
         lng = click$lng, lat = click$lat,
         radius = input$radius_m,
         color = "#2c3e50", fillColor = "#2c3e50",

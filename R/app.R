@@ -4,6 +4,8 @@
 #'   in your browser.
 #'
 #' @return Does not return a value. Launches the Shiny application.
+#' @import leaflet
+#' @import shiny
 #' @export
 #'
 #' @examples
@@ -15,5 +17,5 @@ run_app <- function() {
   if (app_dir == "") {
     stop("Could not find the Shiny app directory. Try re-installing the package.")
   }
-  shiny::runApp(app_dir, display.mode = "normal")
+  runApp(app_dir, display.mode = "normal")
 }

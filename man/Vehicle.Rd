@@ -6,6 +6,23 @@
 \description{
 A base class for buses and trams, storing common properties like ID, route line, spatial coordinates, and delay status.
 }
+\section{Active bindings}{
+\if{html}{\out{<div class="r6-active-bindings">}}
+\describe{
+\item{\code{id}}{Read-only. Returns the vehicle's ID.}
+
+\item{\code{line}}{Read-only. Returns the vehicle's route line.}
+
+\item{\code{lon}}{Read-only. Returns the vehicle's longitude.}
+
+\item{\code{lat}}{Read-only. Returns the vehicle's latitude.}
+
+\item{\code{last_update}}{Read-only. Returns the timestamp of the last GPS update.}
+
+\item{\code{is_delayed}}{Read-only. Returns TRUE if the vehicle is currently delayed.}
+}
+\if{html}{\out{</div>}}
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{

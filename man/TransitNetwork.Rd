@@ -6,6 +6,13 @@
 \description{
 Manages a fleet of Bus and Tram objects and handles global spatial updates.
 }
+\section{Active bindings}{
+\if{html}{\out{<div class="r6-active-bindings">}}
+\describe{
+\item{\code{fleet_size}}{Read-only. Returns the current number of vehicles in the network.}
+}
+\if{html}{\out{</div>}}
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
@@ -97,8 +104,7 @@ Export the current fleet as an sf spatial object for map rendering
 }
 
 \subsection{Returns}{
-An sf object with columns: id, line, is_delayed, is_blocked, vehicle_type, geometry.
-Returns NULL if the fleet is empty.
+An sf object with columns: id, line, is_delayed, is_blocked, vehicle_type, geometry. Returns NULL if the fleet is empty.
 }
 }
 \if{html}{\out{<hr>}}

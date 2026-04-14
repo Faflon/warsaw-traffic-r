@@ -9,6 +9,13 @@ Inherits from Vehicle. Immune to road traffic. Flags as blocked when its track i
 \section{Super class}{
 \code{\link[WarsawTraffic:Vehicle]{WarsawTraffic::Vehicle}} -> \code{Tram}
 }
+\section{Active bindings}{
+\if{html}{\out{<div class="r6-active-bindings">}}
+\describe{
+\item{\code{is_blocked}}{Read-only. TRUE if tram is blocked by a track disruption.}
+}
+\if{html}{\out{</div>}}
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{

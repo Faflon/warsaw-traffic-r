@@ -5,8 +5,8 @@
 \title{Build Route Shapes from GTFS Data}
 \usage{
 build_route_shapes(
-  gtfs_dir = "data/gtfs",
-  output_path = "data/warsaw_routes.rds"
+  gtfs_dir = "inst/extdata/gtfs",
+  output_path = "inst/extdata/warsaw_routes.rds"
 )
 }
 \arguments{
@@ -24,6 +24,6 @@ sf LINESTRING per shape, projects to EPSG:2180, and saves as an .rds file.
 }
 \examples{
 \dontrun{
-  routes_sf <- build_route_shapes("data/gtfs", "data/warsaw_routes.rds")
+  routes_sf <- build_route_shapes("inst/extdata/gtfs", "inst/extdata/warsaw_routes.rds")
 }
 }

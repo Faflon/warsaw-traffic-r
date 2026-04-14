@@ -10,6 +10,8 @@
 #' @return A data frame containing the live locations and details of the vehicles. 
 #'   Returns an empty data frame if the connection or parsing fails.
 #' @export
+#' @importFrom httr GET timeout content
+#' @importFrom jsonlite fromJSON
 #'
 #' @examples
 #' \dontrun{
@@ -37,14 +39,14 @@ fetch_warsaw_transit <- function(api_key, vehicle_type = 1) {
   # Safe API Call using tryCatch
   # We use a timeout so the app doesn't freeze if the server is offline
   response <- tryCatch({
-    httr::GET(
+    GET(
       url = base_url,
       query = list(
         resource_id = resource_id,
         apikey = api_key,
         type = vehicle_type
       ),
-      httr::timeout(10)
+      timeout(10)
     )
   }, error = function(e) {
     message("Failed to connect to the Warsaw Transit API: ", e$message)
@@ -58,8 +60,8 @@ fetch_warsaw_transit <- function(api_key, vehicle_type = 1) {
   
   # Parse the raw JSON response body into an R list
   parsed_data <- tryCatch({
-    raw_text <- httr::content(response, as = "text", encoding = "UTF-8")
-    jsonlite::fromJSON(raw_text, flatten = TRUE)
+    raw_text <- content(response, as = "text", encoding = "UTF-8")
+    fromJSON(raw_text, flatten = TRUE)
   }, error = function(e) {
     warning("Failed to parse API response: ", e$message)
     return(NULL)

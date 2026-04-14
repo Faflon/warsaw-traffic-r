@@ -46,6 +46,7 @@ clean_stale_data <- function(df, max_age_mins = 10) {
 #' @param lat A numeric value representing latitude (must be between -90 and 90).
 #' @param radius_m A positive numeric value representing the buffer radius in meters. Default is 25.
 #' @return An `sfc` polygon object in EPSG:2180 projection representing the disruption zone.
+#' @import sf
 #' @export
 #'
 #' @examples
@@ -71,10 +72,10 @@ create_disruption_buffer <- function(lon, lat, radius_m = 25) {
     warning("Warning: The provided coordinates appear to be outside of Poland. Projection EPSG:2180 may yield distorted results. If you are using data from different area, please change projection.")
   }
 
-  buffer_polygon <- sf::st_point(c(lon, lat)) |>
-    sf::st_sfc(crs = 4326) |> # Add the WGS84 coordinate reference system (standard GPS)
-    sf::st_transform(crs = 2180) |>
-    sf::st_buffer(dist = radius_m)
+  buffer_polygon <- st_point(c(lon, lat)) |>
+    st_sfc(crs = 4326) |> # Add the WGS84 coordinate reference system (standard GPS)
+    st_transform(crs = 2180) |>
+    st_buffer(dist = radius_m)
   
   return(buffer_polygon)
 }
@@ -88,8 +89,9 @@ create_disruption_buffer <- function(lon, lat, radius_m = 25) {
 #' @param buffer_polygon An `sf` or `sfc` polygon object representing the danger zone.
 #' @param route_shapes An `sf` object containing the transit polylines, which must include a `route_short_name` column.
 #' @return A character vector of unique `route_short_name`s affected by the disruption. Returns `character(0)` if none.
+#' @import sf
 #' @export
-#'
+#' 
 #' @examples
 #' \dontrun{
 #'   routes <- readRDS("data/warsaw_routes.rds")
@@ -112,7 +114,7 @@ find_affected_lines <- function(buffer_polygon, route_shapes) {
   
   # Perform the Mathematical Spatial Intersection
   # Setting sparse = FALSE returns a standard dense logical matrix (TRUE/FALSE) making it much easier to subset the data.
-  intersection_matrix <- sf::st_intersects(route_shapes, buffer_polygon, sparse = FALSE)
+  intersection_matrix <- st_intersects(route_shapes, buffer_polygon, sparse = FALSE)
   
   # Extract the row indices where an intersection occurred - intersection_matrix has rows for routes, and 1 column for the single buffer
   affected_indices <- which(intersection_matrix[, 1])

@@ -7,17 +7,18 @@
 #' @param calendar_path A character string representing the file path to calendar.txt.
 #' @param target_date A Date object specifying the date to check. Defaults to Sys.Date().
 #' @return A character vector of active service_ids for the given date.
+#' @importFrom utils read.csv
 #' @export
 #'
 #' @examples
 #' \dontrun{
 #'   # Check for today
-#'   active_services <- get_active_service_id("data/gtfs/calendar.txt")
+#'   active_services <- get_active_service_id("inst/extdata/gtfs/calendar.txt")
 #'   
 #'   # Check for a specific date
-#'   active_services <- get_active_service_id("data/gtfs/calendar.txt", as.Date("2026-03-25"))
+#'   active_services <- get_active_service_id("inst/extdata/gtfs/calendar.txt", as.Date("2026-03-25"))
 #' }
-get_active_service_id <- function(calendar_path="data/gtfs/calendar.txt", target_date = Sys.Date()) {
+get_active_service_id <- function(calendar_path="inst/extdata/gtfs/calendar.txt", target_date = Sys.Date()) {
   
   # Input Validation
   if (!file.exists(calendar_path)) {
@@ -82,13 +83,16 @@ get_active_service_id <- function(calendar_path="data/gtfs/calendar.txt", target
 #' @param gtfs_dir A character string with the path to the directory containing GTFS files.
 #' @param output_path A character string with the path where the .rds file should be saved.
 #' @return An sf object containing the spatial lines.
+#' @import dplyr
+#' @import readr
+#' @import sf
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#'   routes_sf <- build_route_shapes("data/gtfs", "data/warsaw_routes.rds")
+#'   routes_sf <- build_route_shapes("inst/extdata/gtfs", "inst/extdata/warsaw_routes.rds")
 #' }
-build_route_shapes <- function(gtfs_dir = "data/gtfs", output_path = "data/warsaw_routes.rds") {
+build_route_shapes <- function(gtfs_dir = "inst/extdata/gtfs", output_path = "inst/extdata/warsaw_routes.rds") {
   
   # Fetch active service IDs using the function we just created
   calendar_path <- file.path(gtfs_dir, "calendar.txt")
@@ -108,29 +112,29 @@ build_route_shapes <- function(gtfs_dir = "data/gtfs", output_path = "data/warsa
   }
   
   # Read data using readr::read_csv for speed and memory efficiency
-  routes <- readr::read_csv(routes_path, show_col_types = FALSE)
-  trips  <- readr::read_csv(trips_path, show_col_types = FALSE)
-  shapes <- readr::read_csv(shapes_path, show_col_types = FALSE)
+  routes <- read_csv(routes_path, show_col_types = FALSE)
+  trips  <- read_csv(trips_path, show_col_types = FALSE)
+  shapes <- read_csv(shapes_path, show_col_types = FALSE)
 
   # Join and filter to get relevant shape IDs and their route names
   active_trips <- trips |>
-    dplyr::filter(service_id %in% active_services) |>
-    dplyr::left_join(routes, by = "route_id") |>
-    dplyr::select(shape_id, route_short_name) |>
-    dplyr::distinct()
+    filter(service_id %in% active_services) |>
+    left_join(routes, by = "route_id") |>
+    select(shape_id, route_short_name) |>
+    distinct()
   
   # Join active shapes and ensure the points are in the exact physical order
   active_shapes <- shapes |>
-    dplyr::inner_join(active_trips, by = "shape_id") |>
-    dplyr::arrange(shape_id, shape_pt_sequence)
+    inner_join(active_trips, by = "shape_id") |>
+    arrange(shape_id, shape_pt_sequence)
   
   # Convert to sf object, combine dots into lines, and project to metric Polish grid
   routes_sf <- active_shapes |>
-    sf::st_as_sf(coords = c("shape_pt_lon", "shape_pt_lat"), crs = 4326) |>
-    dplyr::group_by(shape_id, route_short_name) |>
-    dplyr::summarise(geometry = sf::st_combine(geometry), .groups = "drop") |>
-    sf::st_cast("LINESTRING") |>
-    sf::st_transform(crs = 2180)
+    st_as_sf(coords = c("shape_pt_lon", "shape_pt_lat"), crs = 4326) |>
+    group_by(shape_id, route_short_name) |>
+    summarise(geometry = st_combine(geometry), .groups = "drop") |>
+    st_cast("LINESTRING") |>
+    st_transform(crs = 2180)
   
   # Save the final processed object to the specified output path
   saveRDS(routes_sf, file = output_path)
