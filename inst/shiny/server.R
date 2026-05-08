@@ -180,4 +180,36 @@ server <- function(input, output, session) {
       n_delayed, " delayed/blocked. Lines: ", affected_text
     ))
   })
+  
+  # debug block: drawing specific route geometry on the map
+  observe({
+    req(route_shapes)
+    
+    line_to_show <- input$debug_line
+    proxy <- leafletProxy("map") |> clearGroup("debug_route")
+    
+    # if input is not empty, search for the route and plot it
+    if (!is.null(line_to_show) && nchar(trimws(line_to_show)) > 0) {
+      target_shape <- route_shapes[route_shapes$route_short_name == trimws(line_to_show), ]
+      
+      if (nrow(target_shape) > 0) {
+        
+        # Transform the metric shape back to WGS84 (GPS degrees) just for Leaflet
+        target_shape_wgs <- sf::st_transform(target_shape, crs = 4326)
+        
+        # plotting the geometry in red
+        proxy |> addPolylines(
+          data = target_shape_wgs,
+          color = "red",
+          weight = 5,
+          opacity = 0.8,
+          group = "debug_route",
+          popup = paste("GTFS Shape for line:", target_shape_wgs$route_short_name)
+        )
+      } else {
+        # if the shape doesn't exist in the data, notify via status message
+        status_msg(paste("Debug: Shape for line", line_to_show, "not found in GTFS data."))
+      }
+    }
+  })
 }

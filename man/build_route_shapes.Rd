@@ -18,12 +18,8 @@ build_route_shapes(
 An sf object containing the spatial lines.
 }
 \description{
-Reads shapes.txt, trips.txt, and routes.txt. Filters by active
-service for today, joins to attach route_short_name to each shape, builds
-sf LINESTRING per shape, projects to EPSG:2180, and saves as an .rds file.
-}
-\examples{
-\dontrun{
-  routes_sf <- build_route_shapes("inst/extdata/gtfs", "inst/extdata/warsaw_routes.rds")
-}
+Reads shapes.txt, trips.txt, and routes.txt. Extracts the
+most frequently used shape for each route (based on trip count) to avoid
+depot runs and temporary detours. Builds sf LINESTRINGs, projects to
+EPSG:2180, and saves as an .rds file.
 }

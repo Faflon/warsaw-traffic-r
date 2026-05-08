@@ -69,7 +69,9 @@ fluidPage(
         tags$div(
           tags$span("\u25CB", style = "color: red; font-size: 16px;"),
           tags$strong(" Tram"), " - blocked"
-        )
+        ),
+        # Text input to specify which line to draw
+        textInput("debug_line", "Debug: Show Line Geometry (e.g., 15)"),
       )
     ),
     
