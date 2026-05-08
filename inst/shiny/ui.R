@@ -80,6 +80,11 @@ fluidPage(
         "gtfs_shape",
         label = NULL,
         placeholder = "Enter line number to show its route, e.g. 15"
+      ),
+      tags$div(
+        style = "font-size: 12px; color: #555; margin-top: 4px;",
+        tags$span("\u2014 ", style = "color: #2980b9; font-weight: bold;"), "Direction A",
+        tags$span("\u00a0\u00a0\u2014 ", style = "color: #E05236; font-weight: bold;"), "Direction B"
       )
     ),
     

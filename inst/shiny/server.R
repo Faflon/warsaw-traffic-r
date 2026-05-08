@@ -138,6 +138,8 @@ server <- function(input, output, session) {
     geom_lines <- find_affected_lines(buffer, route_shapes)
     
     if (length(geom_lines) == 0) {
+      network$reset_disruptions()
+      vehicle_data(network$get_spatial_data())
       leafletProxy("map") |>
         clearGroup("disruption_pin") |>
         addCircles(
@@ -184,8 +186,6 @@ server <- function(input, output, session) {
   
   # drawing the GTFS shape for a specific line on the map
   observe({
-    req(route_shapes)
-    
     line_to_show <- input$gtfs_shape
     proxy <- leafletProxy("map") |> clearGroup("debug_route")
     
@@ -193,22 +193,23 @@ server <- function(input, output, session) {
       target_shape <- route_shapes[route_shapes$route_short_name == trimws(line_to_show), ]
       
       if (nrow(target_shape) > 0) {
-        
         target_shape_wgs <- sf::st_transform(target_shape, crs = 4326)
         
-        proxy |> addPolylines(
-          data = target_shape_wgs,
-          color = "#E05236",
-          weight = 4,
-          opacity = 0.85,
-          dashArray = "8 4",
-          group = "debug_route",
-          popup = paste0(
-            "<b>GTFS shape for line ", target_shape_wgs$route_short_name, "</b><br>"
-          )
+        proxy <- addPolylines(proxy,
+                              data = target_shape_wgs[1, ], color = "#2980b9", weight = 4,
+                              opacity = 0.85, dashArray = "8 4", group = "debug_route",
+                              popup = paste0("<b>Line ", trimws(line_to_show), " — direction A</b>")
         )
+        if (nrow(target_shape_wgs) >= 2) {
+          proxy <- addPolylines(proxy,
+                                data = target_shape_wgs[2, ], color = "#E05236", weight = 4,
+                                opacity = 0.85, dashArray = "8 4", group = "debug_route",
+                                popup = paste0("<b>Line ", trimws(line_to_show), " — direction B</b>")
+          )
+        }
+        
       } else {
-        status_msg(paste("Line", line_to_show, "not found in GTFS data."))
+        status_msg(paste("Line", trimws(line_to_show), "not found in GTFS data."))
       }
     }
   })
