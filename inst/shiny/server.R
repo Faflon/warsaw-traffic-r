@@ -6,7 +6,7 @@ server <- function(input, output, session) {
   
   # loading route shapes only once when the app starts, not on every click
   route_shapes <- tryCatch({
-    path <- file.path(system.file(package = "WarsawTraffic"), "..", "data", "warsaw_routes.rds")
+    path <- file.path(system.file(package = "WarsawTraffic"), "extdata", "warsaw_routes.rds")
     readRDS(normalizePath(path))
   }, error = function(e) {
     message("Could not load route shapes: ", e$message)

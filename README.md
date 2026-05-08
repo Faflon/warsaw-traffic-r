@@ -202,7 +202,7 @@ road.
 
 - Adam Jaworski — <ap.jaworski3@student.uw.edu.pl> — R package
   structure, GTFS preprocessing, API fetcher, R6 class structure,
-  defensive programming, cross-checking
+  defensive programming, review
 - Natalia Namysłowska — <n.namyslowsk@student.uw.edu.pl> — R6 class
   architecture, disruption engine, Shiny dashboard, defensive
-  programming, cross-checking
+  programming, review
