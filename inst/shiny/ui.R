@@ -1,5 +1,3 @@
-library(shiny)
-
 fluidPage(
   
   titlePanel("Warsaw traffic disruption simulator"),

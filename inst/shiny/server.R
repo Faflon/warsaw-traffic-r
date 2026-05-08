@@ -1,13 +1,9 @@
-library(shiny)
-library(leaflet)
-library(sf)
-library(dplyr)
 server <- function(input, output, session) {
   
   # loading route shapes only once when the app starts, not on every click
   route_shapes <- tryCatch({
-    path <- file.path(system.file(package = "WarsawTraffic"), "extdata", "warsaw_routes.rds")
-    readRDS(normalizePath(path))
+    path <- system.file("extdata", "warsaw_routes.rds", package = "WarsawTraffic")
+    readRDS(path)
   }, error = function(e) {
     message("Could not load route shapes: ", e$message)
     NULL
@@ -17,7 +13,7 @@ server <- function(input, output, session) {
   vehicle_data <- reactiveVal(NULL)
   status_msg <- reactiveVal("Ready. Fetch vehicles to begin.")
   
-  # base map rendered once
+  # base map rendered once, all updates go through leafletProxy later
   output$map <- renderLeaflet({
     leaflet() |>
       addTiles() |>
@@ -26,7 +22,26 @@ server <- function(input, output, session) {
   
   output$status_text <- renderText({ status_msg() })
   
-  # fetch button pulls live bus and tram positions from the API
+  # function to assign color based on vehicle type and delay status
+  get_color <- function(vehicle_type, is_blocked, is_delayed) {
+    if (vehicle_type == "tram" && is_blocked) return("red")
+    if (vehicle_type == "bus" && is_delayed) return("orange")
+    return("#2ecc71")
+  }
+  
+  # function to build popup text for a vehicle
+  get_popup <- function(line, id, vehicle_type, is_blocked, is_delayed) {
+    status <- if (vehicle_type == "tram" && is_blocked) "Blocked" else
+      if (vehicle_type == "bus" && is_delayed) "Delayed" else "On time"
+    paste0(
+      "<b>Line:</b> ", line, "<br>",
+      "<b>ID:</b> ", id, "<br>",
+      "<b>Type:</b> ", vehicle_type, "<br>",
+      "<b>Status:</b> ", status
+    )
+  }
+  
+  # fetch button
   observeEvent(input$fetch_btn, {
     api_key <- Sys.getenv("WARSAW_API_KEY")
     if (nchar(api_key) == 0) {
@@ -53,33 +68,18 @@ server <- function(input, output, session) {
     }
   })
   
-  # redraw markers when vehicle data changes after fetch and after each disruption click
+  # redraw markers when vehicle data changes
   observe({
     req(vehicle_data())
     vd <- vehicle_data()
     
-    # sf objects store coordinates in geometry, we pull them out into plain columns
+    # coordinates in geometry, we pull them out into plain columns
     coords <- st_coordinates(vd)
     vd$lng <- coords[, 1]
     vd$lat_coord <- coords[, 2]
     
-    # color depends on vehicle type and current status
-    vd$color <- dplyr::case_when(
-      vd$vehicle_type == "tram" & vd$is_blocked ~ "red",
-      vd$vehicle_type == "bus"  & vd$is_delayed ~ "orange",
-      TRUE ~ "#2ecc71"
-    )
-    
-    vd$popup <- paste0(
-      "<b>Line:</b> ", vd$line, "<br>",
-      "<b>ID:</b> ", vd$id, "<br>",
-      "<b>Type:</b> ", vd$vehicle_type, "<br>",
-      "<b>Status:</b> ", case_when(
-        vd$vehicle_type == "tram" & vd$is_blocked ~ "Blocked",
-        vd$vehicle_type == "bus"  & vd$is_delayed ~ "Delayed",
-        TRUE ~ "On time"
-      )
-    )
+    vd$color <- mapply(get_color, vd$vehicle_type, vd$is_blocked, vd$is_delayed)
+    vd$popup <- mapply(get_popup, vd$line, vd$id, vd$vehicle_type, vd$is_blocked, vd$is_delayed)
     
     buses <- vd[vd$vehicle_type == "bus", ]
     trams <- vd[vd$vehicle_type == "tram", ]
@@ -89,25 +89,25 @@ server <- function(input, output, session) {
     # buses drawn as solid filled circles
     if (nrow(buses) > 0) {
       proxy <- addCircleMarkers(proxy,
-                                         lng = buses$lng, lat = buses$lat_coord,
-                                         color = buses$color, fillColor = buses$color,
-                                         fillOpacity = 0.9, radius = 6, stroke = FALSE,
-                                         popup = buses$popup, group = "vehicles"
+                                lng = buses$lng, lat = buses$lat_coord,
+                                color = buses$color, fillColor = buses$color,
+                                fillOpacity = 0.9, radius = 6, stroke = FALSE,
+                                popup = buses$popup, group = "vehicles"
       )
     }
     
     # trams drawn as outlined rings
     if (nrow(trams) > 0) {
       proxy <- addCircleMarkers(proxy,
-                                         lng = trams$lng, lat = trams$lat_coord,
-                                         color = trams$color, fillColor = trams$color,
-                                         fillOpacity = 0.15, radius = 7, stroke = TRUE, weight = 2.5,
-                                         popup = trams$popup, group = "vehicles"
+                                lng = trams$lng, lat = trams$lat_coord,
+                                color = trams$color, fillColor = trams$color,
+                                fillOpacity = 0.15, radius = 7, stroke = TRUE, weight = 2.5,
+                                popup = trams$popup, group = "vehicles"
       )
     }
   })
   
-  # clear button resets all vehicle states and removes the disruption pin
+  # clear button
   observeEvent(input$clear_btn, {
     network$reset_disruptions()
     vehicle_data(network$get_spatial_data())
@@ -115,7 +115,7 @@ server <- function(input, output, session) {
     status_msg(paste0(network$fleet_size, " vehicles loaded. No disruptions active."))
   })
   
-  # map click places a disruption pin and figures out which lines are affected
+  # map click to place a disruption
   observeEvent(input$map_click, {
     if (is.null(route_shapes)) {
       status_msg("Route shapes not loaded. Run build_route_shapes() first.")
@@ -133,38 +133,36 @@ server <- function(input, output, session) {
     )
     if (is.null(buffer)) return()
     
-    # find all lines crossing the buffer, filtering by disruption type happens inside the R6 classes
+    # finding all lines crossing the buffer
     geom_lines <- find_affected_lines(buffer, route_shapes)
     
     if (length(geom_lines) == 0) {
       leafletProxy("map") |>
         clearGroup("disruption_pin") |>
         addCircles(
-          lng = click$lng, lat = click$lat,
-          radius = input$radius_m,
+          lng = click$lng, lat = click$lat, radius = input$radius_m,
           color = "#2c3e50", fillColor = "#2c3e50",
           fillOpacity = 0.15, weight = 2, opacity = 0.8,
-          group = "disruption_pin",
-          popup = "No routes in this area."
+          group = "disruption_pin", popup = "No routes in this area."
         )
       status_msg("No routes pass through here. Try clicking on a road or tram track.")
       return()
     }
     
-    # reset so that delays from the previous click don't carry over
+    # reseting
     network$reset_disruptions()
     network$apply_disruption(geom_lines, input$disruption_type)
     vehicle_data(network$get_spatial_data())
     
-    # get lines that are actually disrupted, not just geometrically in the buffer, differs for trams and buses
+    # getting lines that are actually disrupted, not just geometrically in the buffer
     vd <- vehicle_data()
     actually_affected <- sort(unique(vd$line[vd$is_delayed | vd$is_blocked]))
+    affected_text <- if (length(actually_affected) > 0) paste(actually_affected, collapse = ", ") else "none"
     
     leafletProxy("map") |>
       clearGroup("disruption_pin") |>
       addCircles(
-        lng = click$lng, lat = click$lat,
-        radius = input$radius_m,
+        lng = click$lng, lat = click$lat, radius = input$radius_m,
         color = "#2c3e50", fillColor = "#2c3e50",
         fillOpacity = 0.15, weight = 2, opacity = 0.8,
         group = "disruption_pin",
@@ -172,18 +170,14 @@ server <- function(input, output, session) {
           "<b>Disruption pin</b><br>",
           "Type: ", input$disruption_type, "<br>",
           "Radius: ", input$radius_m, " m<br>",
-          if (length(actually_affected) > 0)
-            paste("Affected lines:", paste(actually_affected, collapse = ", "))
-          else
-            "No vehicles affected."
+          "Affected lines: ", affected_text
         )
       )
     
     n_delayed <- sum(vd$is_delayed, na.rm = TRUE)
     status_msg(paste0(
       network$fleet_size, " vehicles loaded. ",
-      n_delayed, " delayed/blocked. Lines: ",
-      if (length(actually_affected) > 0) paste(actually_affected, collapse = ", ") else "none"
+      n_delayed, " delayed/blocked. Lines: ", affected_text
     ))
   })
 }

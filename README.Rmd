@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 
 # WarsawTraffic
 
-WarsawTraffic is an R package and interactive Shiny dashboard that simulates the real-time impact of traffic disruptions on the Warsaw public transit network. A user fetches live vehicle positions from the Warsaw Open Data API, drops a disruption pin on a map, and the tool instantly identifies which bus and tram lines are affected — flagging buses as delayed and trams as blocked based on whether their scheduled routes pass through the disrupted area.
+WarsawTraffic is an R package and interactive Shiny dashboard that simulates the real-time impact of traffic disruptions on the Warsaw public transit network. A user fetches live vehicle positions from the Warsaw Open Data API, drops a disruption pin on a map, and the tool instantly identifies which bus and tram lines are affected - flagging buses as delayed and trams as blocked based on whether their scheduled routes pass through the disrupted area.
 
 The project is built as a reusable, scalable tool rather than a one-off analysis. It can be applied to any disruption scenario in Warsaw by any user who installs the package.
 
@@ -50,7 +50,7 @@ Open `.Renviron` with:
 usethis::edit_r_environ(scope = "project")
 ```
 
-Restart your R session after saving. The key is loaded securely with `Sys.getenv("WARSAW_API_KEY")` — it is never hardcoded and is excluded from version control via `.gitignore`.
+Restart your R session after saving. The key is loaded securely with `Sys.getenv("WARSAW_API_KEY")` - it is never hardcoded and is excluded from version control via `.gitignore`.
 
 ### 2. Download GTFS schedule data
 
@@ -84,16 +84,16 @@ WarsawTraffic::run_app()
 
 ### Dashboard walkthrough
 
-**Fetch vehicles** — click the "Fetch vehicles" button to pull live GPS positions for all active buses and trams from the Warsaw API. Vehicles appear as markers on the map: buses as solid filled circles, trams as outlined rings. Green means on time.
+**Fetch vehicles** - click the "Fetch vehicles" button to pull live GPS positions for all active buses and trams from the Warsaw API. Vehicles appear as markers on the map: buses as solid filled circles, trams as outlined rings. Green means on time.
 
-**Drop a disruption pin** — select a disruption type (road traffic or track blockage), then click anywhere on the map. The tool creates a spatial buffer around the click point, checks it against all pre-loaded route geometries, and identifies every line whose path passes through the disrupted area.
+**Drop a disruption pin** - select a disruption type (road traffic or track blockage), then click anywhere on the map. The tool creates a spatial buffer around the click point, checks it against all pre-loaded route geometries, and identifies every line whose path passes through the disrupted area.
 
 - Buses on affected lines turn **orange** (delayed). Buses react to road traffic disruptions only.
-- Trams on affected lines turn **red** (blocked). Trams react to track blockage disruptions only — they are immune to general road traffic since they run on dedicated rails.
+- Trams on affected lines turn **red** (blocked). Trams react to track blockage disruptions only - they are immune to general road traffic since they run on dedicated rails.
 
 Click a vehicle marker to see its ID, line number, and current status in a popup. The status panel in the sidebar shows how many vehicles are currently affected.
 
-**Clear disruptions** — click "Clear disruptions" to reset all vehicles to on-time status and remove the disruption pin from the map.
+**Clear disruptions** - click "Clear disruptions" to reset all vehicles to on-time status and remove the disruption pin from the map.
 
 ---
 
@@ -108,8 +108,8 @@ Live API (Warsaw UM)
             └─ TransitNetwork$update_fleet()   # R6 fleet manager
 
 GTFS schedule (ZTM)
-  └─ build_route_shapes()            # one-time preprocessing
-       └─ data/warsaw_routes.rds     # sf LINESTRING per route, EPSG:2180, loaded once on startup
+  └─ build_route_shapes()                 # one-time preprocessing
+       └─ inst/extdata/warsaw_routes.rds  # sf LINESTRING per route, EPSG:2180, loaded once on startup
 
 User drops pin
   └─ create_disruption_buffer()      # sf polygon in EPSG:2180
@@ -123,23 +123,24 @@ User drops pin
 
 The package uses R6 classes to manage vehicle state across API refreshes. The class hierarchy is:
 
-- **`Vehicle`** (parent) — stores private GPS coordinates, line number, and delay status behind read-only active bindings. The `check_disruption()` method is an error-throwing placeholder that forces use of child classes.
-- **`Bus`** (child) — overrides `check_disruption(affected_lines, disruption_type)`. Sets delayed status if its line appears in the affected lines vector. Unaffected by track blockage events.
-- **`Tram`** (child) — overrides `check_disruption(affected_lines, disruption_type)`. Sets blocked status only for track blockage events. Ignores road traffic disruptions entirely.
-- **`TransitNetwork`** — fleet manager. Holds all `Bus` and `Tram` objects in a private named list. Handles fleet updates from API data, applies disruptions polymorphically, resets state, and exports the fleet as an `sf` spatial object for the Shiny map.
+- **`Vehicle`** (parent) - stores private GPS coordinates, line number, and delay status behind read-only active bindings. The `check_disruption()` method is an error-throwing placeholder that forces use of child classes.
+- **`Bus`** (child) - overrides `check_disruption(affected_lines, disruption_type)`. Sets delayed status if its line appears in the affected lines vector. Unaffected by track blockage events.
+- **`Tram`** (child) - overrides `check_disruption(affected_lines, disruption_type)`. Sets blocked status only for track blockage events. Ignores road traffic disruptions entirely.
+- **`TransitNetwork`** - fleet manager. Holds all `Bus` and `Tram` objects in a private named list. Handles fleet updates from API data, applies disruptions polymorphically, resets state, and exports the fleet as an `sf` spatial object for the Shiny map.
 
 ### Spatial analysis
 
 Route geometry is sourced from the official ZTM GTFS feed. The preprocessing pipeline joins `shapes.txt` → `trips.txt` → `routes.txt` to attach human-readable line names to each spatial shape, then projects all geometries to the Polish national coordinate system (EPSG:2180). This projection is required so that buffer distances are computed in metres rather than degrees.
 
-When a disruption pin is dropped, `sf::st_intersects()` checks the buffer polygon against all route linestrings simultaneously. Only routes whose physical path crosses the disrupted area are returned as affected — a crash on a highway does not flag a bus running on a parallel local road.
+When a disruption pin is dropped, `sf::st_intersects()` checks the buffer polygon against all route linestrings simultaneously. Only routes whose physical path crosses the disrupted area are returned as affected - a crash on a highway does not flag a bus running on a parallel local road.
 
 ---
 
 ## Known limitations
 
-- **Line-level flagging affects both directions** — the live API provides only a line name, not trip direction. Both directions of a line are flagged when either is affected. This is a deliberate simplification given the available data.
-- **Stale GPS positions** — the API occasionally returns vehicles with frozen last-known coordinates. `clean_stale_data()` mitigates this with a 10-minute cutoff.
+- **Line-level flagging affects both directions** - the live API provides only a line name, not trip direction. Both directions of a line are flagged when either is affected. This is a deliberate simplification given the available data.
+- **Stale GPS positions** - the API occasionally returns vehicles with frozen last-known coordinates. `clean_stale_data()` mitigates this with a 10-minute cutoff.
+- **GTFS data must be kept up to date** - the disruption detection relies on pre-processed route geometry from a GTFS feed. Temporary or newly introduced lines will not be detected until `build_route_shapes()` is rerun with a fresh feed from [gtfs.ztm.waw.pl/last](https://gtfs.ztm.waw.pl/last). A vehicle physically near a disruption may also not be flagged if its scheduled route geometry diverges from its actual GPS position.
 
 ---
 
@@ -158,6 +159,7 @@ When a disruption pin is dropped, `sf::st_intersects()` checks the buffer polygo
 
 ## Authors
 
-- Adam Jaworski — ap.jaworski3@student.uw.edu.pl — R package structure, GTFS preprocessing, API fetcher, R6 class structure, defensive programming, review
-- Natalia Namysłowska — n.namyslowsk@student.uw.edu.pl — R6 class architecture, disruption engine, Shiny dashboard, defensive programming, review
+- Adam Jaworski - ap.jaworski3@student.uw.edu.pl - R package structure, GTFS preprocessing, API fetcher, R6 class structure, defensive programming, rewiev
+- Natalia Namysłowska - n.namyslowsk@student.uw.edu.pl - R6 class architecture, disruption engine, Shiny dashboard, defensive programming, review
+
 
