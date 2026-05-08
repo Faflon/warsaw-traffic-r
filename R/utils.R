@@ -19,17 +19,12 @@
 clean_stale_data <- function(df, max_age_mins = 10) {
   if (nrow(df) == 0 || !"Time" %in% colnames(df)) return(df)
   
-  # The API returns time as a string (e.g., "2026-03-10 16:45:00")
-  # We convert it to a POSIXct datetime object
   df$Time <- as.POSIXct(df$Time, format = "%Y-%m-%d %H:%M:%S", tz = "Europe/Warsaw")
   
-  # Get the current system time
   current_time <- Sys.time()
   
-  # Calculate the time difference in minutes
   df$age_mins <- as.numeric(difftime(current_time, df$Time, units = "mins"))
   
-  # Filter out rows older than max_age_mins and drop the temporary column
   cleaned_df <- df[df$age_mins <= max_age_mins & !is.na(df$age_mins), ]
   cleaned_df$age_mins <- NULL
   
@@ -73,7 +68,7 @@ create_disruption_buffer <- function(lon, lat, radius_m = 25) {
   }
 
   buffer_polygon <- st_point(c(lon, lat)) |>
-    st_sfc(crs = 4326) |> # Add the WGS84 coordinate reference system (standard GPS)
+    st_sfc(crs = 4326) |>
     st_transform(crs = 2180) |>
     st_buffer(dist = radius_m)
   
@@ -112,18 +107,17 @@ find_affected_lines <- function(buffer_polygon, route_shapes) {
     stop("Error: 'route_shapes' must contain a 'route_short_name' column.")
   }
   
-  # Perform the Mathematical Spatial Intersection
-  # Setting sparse = FALSE returns a standard dense logical matrix (TRUE/FALSE) making it much easier to subset the data.
+  # sparse = FALSE forces a dense matrix instead of a list of indices which is simpler to subset
   intersection_matrix <- st_intersects(route_shapes, buffer_polygon, sparse = FALSE)
   
-  # Extract the row indices where an intersection occurred - intersection_matrix has rows for routes, and 1 column for the single buffer
+  # rows are routes, the single column is our buffer - which() pulls out the hits
   affected_indices <- which(intersection_matrix[, 1])
   
   if (length(affected_indices) == 0) { #handling empty results
     return(character(0))
   }
   
-  # Extract Unique Route Names
+  # extract unique route names
   affected_routes <- unique(as.character(route_shapes$route_short_name[affected_indices]))
   
   return(affected_routes)

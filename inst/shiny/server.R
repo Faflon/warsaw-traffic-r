@@ -22,7 +22,6 @@ server <- function(input, output, session) {
   
   output$status_text <- renderText({ status_msg() })
   
-  # function to assign color based on vehicle type and delay status
   get_color <- function(vehicle_type, is_blocked, is_delayed) {
     if (vehicle_type == "tram" && is_blocked) return("red")
     if (vehicle_type == "bus" && is_delayed) return("orange")
@@ -51,6 +50,8 @@ server <- function(input, output, session) {
     
     status_msg("Fetching vehicles...")
     
+    network$reset_disruptions()
+    
     result <- tryCatch({
       buses <- fetch_warsaw_transit(api_key, vehicle_type = 1)
       trams <- fetch_warsaw_transit(api_key, vehicle_type = 2)
@@ -73,7 +74,7 @@ server <- function(input, output, session) {
     req(vehicle_data())
     vd <- vehicle_data()
     
-    # coordinates in geometry, we pull them out into plain columns
+    # coordinates are stored in geometry, we pull them out into plain columns
     coords <- st_coordinates(vd)
     vd$lng <- coords[, 1]
     vd$lat_coord <- coords[, 2]
@@ -86,7 +87,7 @@ server <- function(input, output, session) {
     
     proxy <- leafletProxy("map") |> clearGroup("vehicles")
     
-    # buses drawn as solid filled circles
+    # buses drawn as circles
     if (nrow(buses) > 0) {
       proxy <- addCircleMarkers(proxy,
                                 lng = buses$lng, lat = buses$lat_coord,
@@ -96,7 +97,7 @@ server <- function(input, output, session) {
       )
     }
     
-    # trams drawn as outlined rings
+    # trams drawn as rings
     if (nrow(trams) > 0) {
       proxy <- addCircleMarkers(proxy,
                                 lng = trams$lng, lat = trams$lat_coord,
@@ -181,34 +182,33 @@ server <- function(input, output, session) {
     ))
   })
   
-  # debug block: drawing specific route geometry on the map
+  # drawing the GTFS shape for a specific line on the map
   observe({
     req(route_shapes)
     
-    line_to_show <- input$debug_line
+    line_to_show <- input$gtfs_shape
     proxy <- leafletProxy("map") |> clearGroup("debug_route")
     
-    # if input is not empty, search for the route and plot it
     if (!is.null(line_to_show) && nchar(trimws(line_to_show)) > 0) {
       target_shape <- route_shapes[route_shapes$route_short_name == trimws(line_to_show), ]
       
       if (nrow(target_shape) > 0) {
         
-        # Transform the metric shape back to WGS84 (GPS degrees) just for Leaflet
         target_shape_wgs <- sf::st_transform(target_shape, crs = 4326)
         
-        # plotting the geometry in red
         proxy |> addPolylines(
           data = target_shape_wgs,
-          color = "red",
-          weight = 5,
-          opacity = 0.8,
+          color = "#E05236",
+          weight = 4,
+          opacity = 0.85,
+          dashArray = "8 4",
           group = "debug_route",
-          popup = paste("GTFS Shape for line:", target_shape_wgs$route_short_name)
+          popup = paste0(
+            "<b>GTFS shape for line ", target_shape_wgs$route_short_name, "</b><br>"
+          )
         )
       } else {
-        # if the shape doesn't exist in the data, notify via status message
-        status_msg(paste("Debug: Shape for line", line_to_show, "not found in GTFS data."))
+        status_msg(paste("Line", line_to_show, "not found in GTFS data."))
       }
     }
   })

@@ -6,6 +6,7 @@ fluidPage(
     
     sidebarPanel(
       width = 3,
+      style = "height: 85vh; overflow-y: auto; padding-right: 10px;",
       
       h4("1. Load vehicles"),
       actionButton(
@@ -69,9 +70,16 @@ fluidPage(
         tags$div(
           tags$span("\u25CB", style = "color: red; font-size: 16px;"),
           tags$strong(" Tram"), " - blocked"
-        ),
-        # Text input to specify which line to draw
-        textInput("debug_line", "Debug: Show Line Geometry (e.g., 15)"),
+        )
+      ),
+      
+      hr(),
+      
+      h4("Route geometry"),
+      textInput(
+        "gtfs_shape",
+        label = NULL,
+        placeholder = "Enter line number to show its route, e.g. 15"
       )
     ),
     

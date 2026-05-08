@@ -29,16 +29,26 @@ build_route_shapes <- function(gtfs_dir = "inst/extdata/gtfs", output_path = "in
   # 1. Count how many trips use each shape_id
   # Regular passenger routes will have dozens or hundreds of trips.
   # Depot runs will only have a few trips per day.
+  # shape_frequencies <- trips |>
+  #   left_join(routes, by = "route_id") |>
+  #   group_by(route_short_name, shape_id) |>
+  #   summarise(trip_count = n(), .groups = "drop")
+  # 
+  # # 2. Select the single most frequent shape_id for each route
+  # representative_shapes <- shape_frequencies |>
+  #   group_by(route_short_name) |>
+  #   slice_max(order_by = trip_count, n = 1, with_ties = FALSE) |>
+  #   select(shape_id, route_short_name)
+  
   shape_frequencies <- trips |>
     left_join(routes, by = "route_id") |>
-    group_by(route_short_name, shape_id) |>
+    group_by(route_short_name, direction_id, shape_id) |>
     summarise(trip_count = n(), .groups = "drop")
   
-  # 2. Select the single most frequent shape_id for each route
   representative_shapes <- shape_frequencies |>
-    group_by(route_short_name) |>
+    group_by(route_short_name, direction_id) |>
     slice_max(order_by = trip_count, n = 1, with_ties = FALSE) |>
-    select(shape_id, route_short_name)
+    select(shape_id, route_short_name, direction_id)
   
   # 3. Filter the raw points to only keep the representative shapes
   clean_shapes <- shapes |>

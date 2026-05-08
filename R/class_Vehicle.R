@@ -11,7 +11,7 @@ Vehicle <- R6Class("Vehicle",
                      .lon = NULL,
                      .lat = NULL,
                      .last_update = NULL,
-                     .is_delayed = FALSE # FALSE by default, set to TRUE when a disruption is applied
+                     .is_delayed = FALSE
                    ),
                    active = list(
                      #' @field id Read-only. Returns the vehicle's ID.
