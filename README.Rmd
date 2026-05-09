@@ -90,10 +90,13 @@ WarsawTraffic::run_app()
 
 - Buses on affected lines turn **orange** (delayed). Buses react to road traffic disruptions only.
 - Trams on affected lines turn **red** (blocked). Trams react to track blockage disruptions only - they are immune to general road traffic since they run on dedicated rails.
+- Clicking an area with no routes resets all vehicles back to on-time status.
 
 Click a vehicle marker to see its ID, line number, and current status in a popup. The status panel in the sidebar shows how many vehicles are currently affected.
 
 **Clear disruptions** - click "Clear disruptions" to reset all vehicles to on-time status and remove the disruption pin from the map.
+
+**Show route geometry** - type a line number into the "Route geometry" field at the bottom of the sidebar to draw its GTFS shape on the map. Direction A is shown in blue, direction B in orange-red. Useful for verifying that route shapes match the expected path and for understanding which areas a line passes through.
 
 ---
 
@@ -108,15 +111,15 @@ Live API (Warsaw UM)
             └─ TransitNetwork$update_fleet()   # R6 fleet manager
 
 GTFS schedule (ZTM)
-  └─ build_route_shapes()                 # one-time preprocessing
-       └─ inst/extdata/warsaw_routes.rds  # sf LINESTRING per route, EPSG:2180, loaded once on startup
+  └─ build_route_shapes()                 # one-time preprocessing, picks most frequent shape per route per direction
+       └─ inst/extdata/warsaw_routes.rds  # two sf LINESTRINGs per route (direction 0 and 1), EPSG:2180, loaded once on startup
 
 User drops pin
   └─ create_disruption_buffer()      # sf polygon in EPSG:2180
-       └─ find_affected_lines()      # st_intersects() against route shapes
+       └─ find_affected_lines()      # st_intersects() against all route shapes (both directions)
             └─ TransitNetwork$apply_disruption()
-                 ├─ Bus$check_disruption()    # flags delayed if line matches
-                 └─ Tram$check_disruption()   # flags blocked if track_blockage type
+                 ├─ Bus$check_disruption()    # flags delayed if line matches and disruption_type is traffic or both
+                 └─ Tram$check_disruption()   # flags blocked if disruption_type is track_blockage or both
 ```
 
 ### Object-oriented design
@@ -132,13 +135,13 @@ The package uses R6 classes to manage vehicle state across API refreshes. The cl
 
 Route geometry is sourced from the official ZTM GTFS feed. The preprocessing pipeline joins `shapes.txt` → `trips.txt` → `routes.txt` to attach human-readable line names to each spatial shape, then projects all geometries to the Polish national coordinate system (EPSG:2180). This projection is required so that buffer distances are computed in metres rather than degrees.
 
-When a disruption pin is dropped, `sf::st_intersects()` checks the buffer polygon against all route linestrings simultaneously. Only routes whose physical path crosses the disrupted area are returned as affected - a crash on a highway does not flag a bus running on a parallel local road.
+When a disruption pin is dropped, sf::st_intersects() checks the buffer polygon against all route linestrings simultaneously — including both directions of each route. Only routes whose physical path crosses the disrupted area are returned as affected.
 
 ---
 
 ## Known limitations
 
-- **Line-level flagging affects both directions** - the live API provides only a line name, not trip direction. Both directions of a line are flagged when either is affected. This is a deliberate simplification given the available data.
+- **Line-level flagging affects both directions** - the live API provides only a line name, not trip direction. When a disruption affects one direction of a route, all vehicles on that line are flagged regardless of which direction they are travelling. This is a deliberate simplification given the available data.
 - **Stale GPS positions** - the API occasionally returns vehicles with frozen last-known coordinates. `clean_stale_data()` mitigates this with a 10-minute cutoff.
 - **GTFS data must be kept up to date** - the disruption detection relies on pre-processed route geometry from a GTFS feed. Temporary or newly introduced lines will not be detected until `build_route_shapes()` is rerun with a fresh feed from [gtfs.ztm.waw.pl/last](https://gtfs.ztm.waw.pl/last). A vehicle physically near a disruption may also not be flagged if its scheduled route geometry diverges from its actual GPS position.
 
@@ -148,7 +151,7 @@ When a disruption pin is dropped, `sf::st_intersects()` checks the buffer polygo
 
 | Technique | Where |
 |---|---|
-| Advanced functions + defensive programming | `fetch_warsaw_transit()`, `clean_stale_data()`, `get_active_service_id()`, `create_disruption_buffer()`, `find_affected_lines()` |
+| Advanced functions + defensive programming | `fetch_warsaw_transit()`, `clean_stale_data()`, `create_disruption_buffer()`, `find_affected_lines()` |
 | Object-oriented programming (R6) | `Vehicle`, `Bus`, `Tram`, `TransitNetwork` classes |
 | Shiny application | `inst/shiny/ui.R`, `inst/shiny/server.R`, `run_app()` |
 | R package structure | `DESCRIPTION`, `NAMESPACE`, roxygen documentation, `man/`, `inst/` |
