@@ -1,9 +1,12 @@
-#' @description Fetches live GPS coordinates and metadata for buses or trams in Warsaw using the official UM Warszawa API. Automatically cleans stale data and converts coordinates to numeric format for spatial processing.
+#' @description Fetches live GPS coordinates and metadata for buses or trams in
+#'  Warsaw using the official UM Warszawa API. Automatically cleans stale data 
+#'  and converts coordinates to numeric format for spatial processing.
 #'
 #' @param api_key A character string containing your personal API key from api.um.warszawa.pl.
 #' @param vehicle_type An integer: 1 for buses, 2 for trams. Default is 1.
 #' 
-#' @return A data frame containing the live locations and details of the vehicles. Returns an empty data frame if the connection or parsing fails.
+#' @return A data frame containing the live locations and details of the vehicles. 
+#'  Returns an empty data frame if the connection or parsing fails.
 #' @export
 #' @importFrom httr GET timeout content
 #' @importFrom jsonlite fromJSON
