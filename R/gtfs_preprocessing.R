@@ -1,4 +1,4 @@
-#' Build Route Shapes from GTFS Data
+#' Build route shapes from GTFS data
 #'
 #' @description Reads shapes.txt, trips.txt, and routes.txt. Extracts the 
 #' most frequently used shape for each route (based on trip count) to avoid 
@@ -26,24 +26,24 @@ build_route_shapes <- function(gtfs_dir = "inst/extdata/gtfs", output_path = "in
   trips  <- read_csv(trips_path, show_col_types = FALSE)
   shapes <- read_csv(shapes_path, show_col_types = FALSE)
   
-  # 1. Count how many trips use each shape_id
+  # count how many trips use each shape_id
   shape_frequencies <- trips |>
     left_join(routes, by = "route_id") |>
     group_by(route_short_name, direction_id, shape_id) |>
     summarise(trip_count = n(), .groups = "drop")
   
-  # # 2. Select the single most frequent shape_id for each route
+  # select the single most frequent shape_id for each route
   representative_shapes <- shape_frequencies |>
     group_by(route_short_name, direction_id) |>
     slice_max(order_by = trip_count, n = 1, with_ties = FALSE) |>
     select(shape_id, route_short_name, direction_id)
   
-  # # 3. Filter the raw points to only keep the representative shapes
+  # filter the raw points to only keep the representative shapes
   clean_shapes <- shapes |>
     inner_join(representative_shapes, by = "shape_id") |>
     arrange(shape_id, shape_pt_sequence)
   
-  # # 4. Convert to sf LINESTRING objects
+  # convert to sf LINESTRING objects
   routes_sf <- clean_shapes |>
     st_as_sf(coords = c("shape_pt_lon", "shape_pt_lat"), crs = 4326) |>
     group_by(shape_id, route_short_name, direction_id) |>

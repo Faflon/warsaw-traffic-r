@@ -1,5 +1,3 @@
-#' Get Active Service ID from GTFS Calendar
-#'
 #' @description Reads the GTFS calendar.txt file and finds the active service_id
 #' for a specific date and weekday. Gracefully warns if the feed has expired or
 #' the date is out of bounds.
@@ -11,16 +9,8 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#'   # Check for today
-#'   active_services <- get_active_service_id("inst/extdata/gtfs/calendar.txt")
-#'   
-#'   # Check for a specific date
-#'   active_services <- get_active_service_id("inst/extdata/gtfs/calendar.txt", as.Date("2026-03-25"))
-#' }
 get_active_service_id_old <- function(calendar_path="inst/extdata/gtfs/calendar.txt", target_date = Sys.Date()) {
   
-  # Input Validation
   if (!file.exists(calendar_path)) {
     stop("Error: calendar.txt not found at the specified path.")
   }
@@ -39,11 +29,9 @@ get_active_service_id_old <- function(calendar_path="inst/extdata/gtfs/calendar.
     stop("Error reading calendar.txt: ", e$message)
   })
   
-  # Convert start_date and end_date from YYYYMMDD to Date objects
   calendar_data$start_date_parsed <- as.Date(as.character(calendar_data$start_date), format = "%Y%m%d")
   calendar_data$end_date_parsed   <- as.Date(as.character(calendar_data$end_date), format = "%Y%m%d")
   
-  # Defensive Programming: Warn if the chosen date is outside the feed boundaries
   min_date <- min(calendar_data$start_date_parsed, na.rm = TRUE)
   max_date <- max(calendar_data$end_date_parsed, na.rm = TRUE)
   
@@ -54,11 +42,11 @@ get_active_service_id_old <- function(calendar_path="inst/extdata/gtfs/calendar.
   }
   
   # Determine the weekday of the target date
-  day_index <- as.POSIXlt(target_date)$wday  # 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  day_index <- as.POSIXlt(target_date)$wday  # 0 = Sunday, 1 = Monday, ...
   days_map <- c("sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday")
   weekday_name <- days_map[day_index + 1]  # +1 because R vectors are 1-indexed
   
-  # Filter the data to find the active service_id
+  # Filtering the data to find the active service_id
   active_rows <- calendar_data[
       calendar_data$start_date_parsed <= target_date &
       calendar_data$end_date_parsed >= target_date &
@@ -74,8 +62,6 @@ get_active_service_id_old <- function(calendar_path="inst/extdata/gtfs/calendar.
 }
 
 
-#' Build Route Shapes from GTFS Data
-#'
 #' @description Reads shapes.txt, trips.txt, and routes.txt. Filters by active 
 #' service for today, joins to attach route_short_name to each shape, builds 
 #' sf LINESTRING per shape, projects to EPSG:2180, and saves as an .rds file.
@@ -88,13 +74,8 @@ get_active_service_id_old <- function(calendar_path="inst/extdata/gtfs/calendar.
 #' @import sf
 #' @export
 #'
-#' @examples
-#' \dontrun{
-#'   routes_sf <- build_route_shapes("inst/extdata/gtfs", "inst/extdata/warsaw_routes.rds")
-#' }
 build_route_shapes_old <- function(gtfs_dir = "inst/extdata/gtfs", output_path = "inst/extdata/warsaw_routes.rds") {
   
-  # Fetch active service IDs using the function we just created
   calendar_path <- file.path(gtfs_dir, "calendar.txt")
   active_services <- get_active_service_id_old(calendar_path)
   
@@ -102,7 +83,6 @@ build_route_shapes_old <- function(gtfs_dir = "inst/extdata/gtfs", output_path =
     stop("Error: No active services found. Cannot build route shapes.")
   }
   
-  # Define file paths for the required text files
   shapes_path <- file.path(gtfs_dir, "shapes.txt")
   trips_path  <- file.path(gtfs_dir, "trips.txt")
   routes_path <- file.path(gtfs_dir, "routes.txt")
@@ -111,24 +91,22 @@ build_route_shapes_old <- function(gtfs_dir = "inst/extdata/gtfs", output_path =
     stop("Error: Missing required GTFS files in the specified directory.")
   }
   
-  # Read data using readr::read_csv for speed and memory efficiency
   routes <- read_csv(routes_path, show_col_types = FALSE)
   trips  <- read_csv(trips_path, show_col_types = FALSE)
   shapes <- read_csv(shapes_path, show_col_types = FALSE)
 
-  # Join and filter to get relevant shape IDs and their route names
   active_trips <- trips |>
     filter(service_id %in% active_services) |>
     left_join(routes, by = "route_id") |>
     select(shape_id, route_short_name) |>
     distinct()
   
-  # Join active shapes and ensure the points are in the exact physical order
+  # joining active shapes and ensuring the points are in the exact physical order
   active_shapes <- shapes |>
     inner_join(active_trips, by = "shape_id") |>
     arrange(shape_id, shape_pt_sequence)
   
-  # Convert to sf object, combine dots into lines, and project to metric Polish grid
+  # converting to sf object, combining dots into lines, and project to metric Polish grid
   routes_sf <- active_shapes |>
     st_as_sf(coords = c("shape_pt_lon", "shape_pt_lat"), crs = 4326) |>
     group_by(shape_id, route_short_name) |>
@@ -136,7 +114,6 @@ build_route_shapes_old <- function(gtfs_dir = "inst/extdata/gtfs", output_path =
     st_cast("LINESTRING") |>
     st_transform(crs = 2180)
   
-  # Save the final processed object to the specified output path
   saveRDS(routes_sf, file = output_path)
   
   return(routes_sf)

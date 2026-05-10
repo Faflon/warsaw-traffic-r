@@ -74,7 +74,7 @@ server <- function(input, output, session) {
     req(vehicle_data())
     vd <- vehicle_data()
     
-    # coordinates are stored in geometry, we pull them out into plain columns
+    # coordinates are stored in a single geometry column, we pull them out into plain columns
     coords <- st_coordinates(vd)
     vd$lng <- coords[, 1]
     vd$lat_coord <- coords[, 2]

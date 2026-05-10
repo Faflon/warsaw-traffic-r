@@ -9,13 +9,7 @@
 #' @return A cleaned data frame with only recently updated vehicles. Returns the original 
 #'   data frame if it is empty or missing the "Time" column.
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#'   live_data <- fetch_warsaw_transit(api_key = "YOUR_API_KEY", vehicle_type = 1)
-#'   # Keep only buses updated in the last 5 minutes
-#'   fresh_buses <- clean_stale_data(live_data, max_age_mins = 5)
-#' }
+#' 
 clean_stale_data <- function(df, max_age_mins = 10) {
   if (nrow(df) == 0 || !"Time" %in% colnames(df)) return(df)
   
@@ -31,7 +25,7 @@ clean_stale_data <- function(df, max_age_mins = 10) {
   return(cleaned_df)
 }
 
-#' Create a Spatial Buffer for a Disruption
+#' Create a spatial buffer for a disruption
 #'
 #' @description Takes a raw GPS coordinate (longitude and latitude), converts it 
 #' into a spatial point, projects it to the metric Polish coordinate system (EPSG:2180), 
@@ -43,12 +37,7 @@ clean_stale_data <- function(df, max_age_mins = 10) {
 #' @return An `sfc` polygon object in EPSG:2180 projection representing the disruption zone.
 #' @import sf
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#'   # Create a n-meter buffer (15 meters default) around a point in central Warsaw
-#'   danger_zone <- create_disruption_buffer(lon = 21.0122, lat = 52.2297, radius_m = 15)
-#' }
+#' 
 create_disruption_buffer <- function(lon, lat, radius_m = 25) {
   
   if (!is.numeric(lon) || lon < -180 || lon > 180) {
@@ -64,9 +53,10 @@ create_disruption_buffer <- function(lon, lat, radius_m = 25) {
   }
   
   if (lon < 14.1 || lon > 24.1 || lat < 49.0 || lat > 54.8) {
-    warning("Warning: The provided coordinates appear to be outside of Poland. Projection EPSG:2180 may yield distorted results. If you are using data from different area, please change projection.")
+    warning("Warning: The provided coordinates appear to be outside of Poland. Projection EPSG:2180 may yield distorted results.")
   }
 
+  # projecting to metres first so the buffer distance is accurate, degrees won't work
   buffer_polygon <- st_point(c(lon, lat)) |>
     st_sfc(crs = 4326) |>
     st_transform(crs = 2180) |>
@@ -75,7 +65,7 @@ create_disruption_buffer <- function(lon, lat, radius_m = 25) {
   return(buffer_polygon)
 }
 
-#' Find Transit Lines Affected by a Disruption Buffer
+#' Find transit lines affected by a disruption buffer
 #'
 #' @description Takes a spatial polygon representing a disruption zone and checks
 #' it against a spatial dataset of transit routes. Identifies which specific 
@@ -87,12 +77,6 @@ create_disruption_buffer <- function(lon, lat, radius_m = 25) {
 #' @import sf
 #' @export
 #' 
-#' @examples
-#' \dontrun{
-#'   routes <- readRDS("data/warsaw_routes.rds")
-#'   danger_zone <- create_disruption_buffer(lon = 21.0122, lat = 52.2297, radius_m = 15)
-#'   affected_lines <- find_affected_lines(danger_zone, routes)
-#' }
 find_affected_lines <- function(buffer_polygon, route_shapes) {
   
   if (!inherits(buffer_polygon, c("sf", "sfc"))) {
@@ -110,14 +94,14 @@ find_affected_lines <- function(buffer_polygon, route_shapes) {
   # sparse = FALSE forces a dense matrix instead of a list of indices which is simpler to subset
   intersection_matrix <- st_intersects(route_shapes, buffer_polygon, sparse = FALSE)
   
-  # rows are routes, the single column is our buffer - which() pulls out the hits
+  # rows are routes, the single column is our buffer, which() pulls out the TRUE affected indices
   affected_indices <- which(intersection_matrix[, 1])
   
-  if (length(affected_indices) == 0) { #handling empty results
+  if (length(affected_indices) == 0) {
     return(character(0))
   }
   
-  # extract unique route names
+  # extracting unique route names
   affected_routes <- unique(as.character(route_shapes$route_short_name[affected_indices]))
   
   return(affected_routes)
