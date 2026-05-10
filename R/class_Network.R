@@ -88,10 +88,10 @@ TransitNetwork <- R6Class("TransitNetwork",
                               
                               df <- do.call(rbind, lapply(private$.fleet, function(v) {
                                 data.frame(
-                                  id         = v$id,
-                                  line       = v$line,
-                                  lon        = v$lon,
-                                  lat        = v$lat,
+                                  id = v$id,
+                                  line = v$line,
+                                  lon = v$lon,
+                                  lat = v$lat,
                                   is_delayed = v$is_delayed,
                                   is_blocked = if (inherits(v, "Tram")) v$is_blocked else FALSE,
                                   vehicle_type = if (inherits(v, "Tram")) "tram" else "bus",
