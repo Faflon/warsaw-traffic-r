@@ -1,29 +1,15 @@
-#' Fetch Live Public Transit Data from Warsaw API
-#'
-#' @description Fetches live GPS coordinates and metadata for buses or trams 
-#'   in Warsaw using the official UM Warszawa API. Automatically cleans stale 
-#'   data and converts coordinates to numeric format for spatial processing.
+#' @description Fetches live GPS coordinates and metadata for buses or trams in Warsaw using the official UM Warszawa API. Automatically cleans stale data and converts coordinates to numeric format for spatial processing.
 #'
 #' @param api_key A character string containing your personal API key from api.um.warszawa.pl.
 #' @param vehicle_type An integer: 1 for buses, 2 for trams. Default is 1.
 #' 
-#' @return A data frame containing the live locations and details of the vehicles. 
-#'   Returns an empty data frame if the connection or parsing fails.
+#' @return A data frame containing the live locations and details of the vehicles. Returns an empty data frame if the connection or parsing fails.
 #' @export
 #' @importFrom httr GET timeout content
 #' @importFrom jsonlite fromJSON
-#'
-#' @examples
-#' \dontrun{
-#'   # Fetch live bus data
-#'   buses <- fetch_warsaw_transit(api_key = "YOUR_API_KEY", vehicle_type = 1)
-#'   
-#'   # Fetch live tram data
-#'   trams <- fetch_warsaw_transit(api_key = "YOUR_API_KEY", vehicle_type = 2)
-#' }
+#' 
 fetch_warsaw_transit <- function(api_key, vehicle_type = 1) {
   
-  # Input Validation
   if (missing(api_key) || !is.character(api_key) || nchar(api_key) == 0) {
     stop("Error: A valid API key must be provided as a string.")
   }
@@ -32,12 +18,9 @@ fetch_warsaw_transit <- function(api_key, vehicle_type = 1) {
     stop("Error: vehicle_type must be 1 (buses) or 2 (trams).")
   }
   
-  # API Endpoint and required resource ID for buses/trams
   base_url <- "https://api.um.warszawa.pl/api/action/busestrams_get/"
   resource_id <- "f2e5503e927d-4ad3-9500-4ab9e55deb59"
   
-  # Safe API Call using tryCatch
-  # We use a timeout so the app doesn't freeze if the server is offline
   response <- tryCatch({
     GET(
       url = base_url,
@@ -53,12 +36,10 @@ fetch_warsaw_transit <- function(api_key, vehicle_type = 1) {
     return(NULL)
   })
   
-  # If the request failed entirely (e.g. timeout, no connection), return early
   if (is.null(response)) {
     return(data.frame())
   }
   
-  # Parse the raw JSON response body into an R list
   parsed_data <- tryCatch({
     raw_text <- content(response, as = "text", encoding = "UTF-8")
     fromJSON(raw_text, flatten = TRUE)
@@ -71,9 +52,7 @@ fetch_warsaw_transit <- function(api_key, vehicle_type = 1) {
     return(data.frame())
   }
   
-  # Handle the specific structure of the Warsaw API
-  # The Warsaw API returns errors as a string inside the 'result' field,
-  # rather than a standard HTTP error code.
+  # The Warsaw API returns errors as a string, rather than a standard HTTP error code
   if (!"result" %in% names(parsed_data)) {
     warning("Unexpected API response structure.")
     return(data.frame())
@@ -86,7 +65,6 @@ fetch_warsaw_transit <- function(api_key, vehicle_type = 1) {
   
   df <- as.data.frame(parsed_data$result)
   
-  # Convert lat/lon from characters to numeric for future spatial calculations
   if ("Lat" %in% colnames(df) && "Lon" %in% colnames(df)) {
     df$Lat <- as.numeric(df$Lat)
     df$Lon <- as.numeric(df$Lon)
