@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{create_disruption_buffer}
 \alias{create_disruption_buffer}
-\title{Create a Spatial Buffer for a Disruption}
+\title{Create a spatial buffer for a disruption}
 \usage{
 create_disruption_buffer(lon, lat, radius_m = 25)
 }
@@ -20,10 +20,4 @@ An \code{sfc} polygon object in EPSG:2180 projection representing the disruption
 Takes a raw GPS coordinate (longitude and latitude), converts it
 into a spatial point, projects it to the metric Polish coordinate system (EPSG:2180),
 and draws a circular buffer around it.
-}
-\examples{
-\dontrun{
-  # Create a n-meter buffer (15 meters default) around a point in central Warsaw
-  danger_zone <- create_disruption_buffer(lon = 21.0122, lat = 52.2297, radius_m = 15)
-}
 }

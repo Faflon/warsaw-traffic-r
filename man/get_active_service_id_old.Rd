@@ -2,7 +2,7 @@
 % Please edit documentation in R/gtfs_preprocessing_old.R
 \name{get_active_service_id_old}
 \alias{get_active_service_id_old}
-\title{Get Active Service ID from GTFS Calendar}
+\title{Build route shapes from GTFS data}
 \usage{
 get_active_service_id_old(
   calendar_path = "inst/extdata/gtfs/calendar.txt",
@@ -21,13 +21,4 @@ A character vector of active service_ids for the given date.
 Reads the GTFS calendar.txt file and finds the active service_id
 for a specific date and weekday. Gracefully warns if the feed has expired or
 the date is out of bounds.
-}
-\examples{
-\dontrun{
-  # Check for today
-  active_services <- get_active_service_id("inst/extdata/gtfs/calendar.txt")
-  
-  # Check for a specific date
-  active_services <- get_active_service_id("inst/extdata/gtfs/calendar.txt", as.Date("2026-03-25"))
-}
 }

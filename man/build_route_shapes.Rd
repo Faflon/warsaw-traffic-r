@@ -2,7 +2,7 @@
 % Please edit documentation in R/gtfs_preprocessing.R
 \name{build_route_shapes}
 \alias{build_route_shapes}
-\title{Build Route Shapes from GTFS Data}
+\title{Build route shapes from GTFS data}
 \usage{
 build_route_shapes(
   gtfs_dir = "inst/extdata/gtfs",

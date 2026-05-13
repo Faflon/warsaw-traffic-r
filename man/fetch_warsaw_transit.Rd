@@ -2,7 +2,7 @@
 % Please edit documentation in R/api_fetcher.R
 \name{fetch_warsaw_transit}
 \alias{fetch_warsaw_transit}
-\title{Fetch Live Public Transit Data from Warsaw API}
+\title{Get live vechicle data}
 \usage{
 fetch_warsaw_transit(api_key, vehicle_type = 1)
 }
@@ -16,16 +16,7 @@ A data frame containing the live locations and details of the vehicles.
 Returns an empty data frame if the connection or parsing fails.
 }
 \description{
-Fetches live GPS coordinates and metadata for buses or trams
-in Warsaw using the official UM Warszawa API. Automatically cleans stale
-data and converts coordinates to numeric format for spatial processing.
-}
-\examples{
-\dontrun{
-  # Fetch live bus data
-  buses <- fetch_warsaw_transit(api_key = "YOUR_API_KEY", vehicle_type = 1)
-  
-  # Fetch live tram data
-  trams <- fetch_warsaw_transit(api_key = "YOUR_API_KEY", vehicle_type = 2)
-}
+Fetches live GPS coordinates and metadata for buses or trams in
+Warsaw using the official UM Warszawa API. Automatically cleans stale data
+and converts coordinates to numeric format for spatial processing.
 }

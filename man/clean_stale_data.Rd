@@ -20,10 +20,3 @@ Filters out vehicle locations older than a specified number of minutes
 by comparing the \code{Time} column in the API data to the current system time.
 This ensures the map only displays active vehicles.
 }
-\examples{
-\dontrun{
-  live_data <- fetch_warsaw_transit(api_key = "YOUR_API_KEY", vehicle_type = 1)
-  # Keep only buses updated in the last 5 minutes
-  fresh_buses <- clean_stale_data(live_data, max_age_mins = 5)
-}
-}

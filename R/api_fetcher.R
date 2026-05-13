@@ -1,3 +1,5 @@
+#' Get live vechicle data
+#'
 #' @description Fetches live GPS coordinates and metadata for buses or trams in
 #'  Warsaw using the official UM Warszawa API. Automatically cleans stale data 
 #'  and converts coordinates to numeric format for spatial processing.

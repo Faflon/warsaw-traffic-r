@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{find_affected_lines}
 \alias{find_affected_lines}
-\title{Find Transit Lines Affected by a Disruption Buffer}
+\title{Find transit lines affected by a disruption buffer}
 \usage{
 find_affected_lines(buffer_polygon, route_shapes)
 }
@@ -18,11 +18,4 @@ A character vector of unique \code{route_short_name}s affected by the disruption
 Takes a spatial polygon representing a disruption zone and checks
 it against a spatial dataset of transit routes. Identifies which specific
 routes cross into the buffer.
-}
-\examples{
-\dontrun{
-  routes <- readRDS("data/warsaw_routes.rds")
-  danger_zone <- create_disruption_buffer(lon = 21.0122, lat = 52.2297, radius_m = 15)
-  affected_lines <- find_affected_lines(danger_zone, routes)
-}
 }

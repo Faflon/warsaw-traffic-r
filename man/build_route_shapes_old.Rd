@@ -22,8 +22,3 @@ Reads shapes.txt, trips.txt, and routes.txt. Filters by active
 service for today, joins to attach route_short_name to each shape, builds
 sf LINESTRING per shape, projects to EPSG:2180, and saves as an .rds file.
 }
-\examples{
-\dontrun{
-  routes_sf <- build_route_shapes("inst/extdata/gtfs", "inst/extdata/warsaw_routes.rds")
-}
-}

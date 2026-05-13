@@ -1,3 +1,5 @@
+#' Build route shapes from GTFS data
+#' 
 #' @description Reads the GTFS calendar.txt file and finds the active service_id
 #' for a specific date and weekday. Gracefully warns if the feed has expired or
 #' the date is out of bounds.
@@ -8,7 +10,6 @@
 #' @importFrom utils read.csv
 #' @export
 #'
-#' @examples
 get_active_service_id_old <- function(calendar_path="inst/extdata/gtfs/calendar.txt", target_date = Sys.Date()) {
   
   if (!file.exists(calendar_path)) {
@@ -61,7 +62,8 @@ get_active_service_id_old <- function(calendar_path="inst/extdata/gtfs/calendar.
   return(active_rows$service_id)
 }
 
-
+#' Build Route Shapes from GTFS Data
+#'
 #' @description Reads shapes.txt, trips.txt, and routes.txt. Filters by active 
 #' service for today, joins to attach route_short_name to each shape, builds 
 #' sf LINESTRING per shape, projects to EPSG:2180, and saves as an .rds file.
