@@ -141,6 +141,7 @@ understanding which areas a line passes through.
                 └─ TransitNetwork$apply_disruption()
                      ├─ Bus$check_disruption()    # flags delayed if line matches and disruption_type is traffic or both
                      └─ Tram$check_disruption()   # flags blocked if disruption_type is track_blockage or both
+                           └─ TransitNetwork$get_spatial_data()  # exports fleet as sf object -> Shiny map
 
 ### Object-oriented design
 
@@ -217,7 +218,7 @@ disrupted area are returned as affected.
 
 - Adam Jaworski - <ap.jaworski3@student.uw.edu.pl> - R package
   structure, GTFS preprocessing, API fetcher, R6 class structure,
-  defensive programming, rewiev
+  defensive programming, review
 - Natalia Namysłowska - <n.namyslowsk@student.uw.edu.pl> - R6 class
   architecture, disruption engine, Shiny dashboard, defensive
   programming, review
