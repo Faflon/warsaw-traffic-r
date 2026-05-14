@@ -55,10 +55,12 @@ Restart your R session after saving. The key is loaded securely with `Sys.getenv
 ### 2. Download GTFS schedule data
 
 Download the current Warsaw transit schedule from ZTM:
-
 [https://gtfs.ztm.waw.pl/last](https://gtfs.ztm.waw.pl/last)
-
 Unzip the archive. You will need the folder path for the preprocessing step below.
+
+Or download a cached snapshot (as of 2026-05-14) from Google Drive:
+[https://drive.google.com/drive/folders/1YAk-4QwEX6xpDsPgQMhWoTNd1t1SNXub?usp=sharing](https://drive.google.com/drive/folders/1YAk-4QwEX6xpDsPgQMhWoTNd1t1SNXub?usp=sharing)
+Unzip the downloaded files into `path/to/your/gtfs/folder`.
 
 ### 3. Preprocess route geometry
 
