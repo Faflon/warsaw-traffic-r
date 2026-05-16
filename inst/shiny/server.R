@@ -198,13 +198,13 @@ server <- function(input, output, session) {
         proxy <- addPolylines(proxy,
                               data = target_shape_wgs[1, ], color = "#2980b9", weight = 4,
                               opacity = 0.85, dashArray = "8 4", group = "debug_route",
-                              popup = paste0("<b>Line ", trimws(line_to_show), " — direction A</b>")
+                              popup = paste0("<b>Line ", trimws(line_to_show), " \u2014 direction A</b>")
         )
         if (nrow(target_shape_wgs) >= 2) {
           proxy <- addPolylines(proxy,
                                 data = target_shape_wgs[2, ], color = "#E05236", weight = 4,
                                 opacity = 0.85, dashArray = "8 4", group = "debug_route",
-                                popup = paste0("<b>Line ", trimws(line_to_show), " — direction B</b>")
+                                popup = paste0("<b>Line ", trimws(line_to_show), " \u2014 direction B</b>")
           )
         }
         
