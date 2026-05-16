@@ -151,9 +151,9 @@ fluidPage(
                tags$div(class = "radio-card",
                         radioButtons("disruption_type", label = NULL,
                                      choices = c(
-                                       "Road traffic \u2014 buses only"   = "traffic",
-                                       "Track blockage \u2014 trams only" = "track_blockage",
-                                       "Both \u2014 all vehicles"          = "both"
+                                       "Road traffic - buses only" = "traffic",
+                                       "Track blockage - trams only" = "track_blockage",
+                                       "Both - all vehicles" = "both"
                                      ),
                                      selected = "traffic"
                         )
@@ -172,10 +172,10 @@ fluidPage(
                hr(),
                
                h4("Legend"),
-               tags$div(class = "legend-row", tags$div(class = "legend-dot", style = "background: #2ecc71;"), "Bus \u2014 on time"),
-               tags$div(class = "legend-row", tags$div(class = "legend-dot", style = "background: #f39c12;"), "Bus \u2014 delayed"),
-               tags$div(class = "legend-row", tags$div(class = "legend-ring", style = "border-color: #2ecc71;"), "Tram \u2014 on time"),
-               tags$div(class = "legend-row", tags$div(class = "legend-ring", style = "border-color: #e74c3c;"), "Tram \u2014 blocked"),
+               tags$div(class = "legend-row", tags$div(class = "legend-dot", style = "background: #2ecc71;"), "Bus - on time"),
+               tags$div(class = "legend-row", tags$div(class = "legend-dot", style = "background: #f39c12;"), "Bus - delayed"),
+               tags$div(class = "legend-row", tags$div(class = "legend-ring", style = "border-color: #2ecc71;"), "Tram - on time"),
+               tags$div(class = "legend-row", tags$div(class = "legend-ring", style = "border-color: #e74c3c;"), "Tram - blocked"),
                
                hr(),
                
@@ -183,8 +183,8 @@ fluidPage(
                textInput("gtfs_shape", label = NULL, placeholder = "Enter line number, e.g. 15"),
                tags$div(
                  style = "display: flex; gap: 16px; font-family: 'DM Mono', monospace; font-size: 10.5px; color: #a0b8d0; margin-top: 8px;",
-                 tags$span(tags$b(style = "color: #2980b9;", "\u2014"), " Direction A"),
-                 tags$span(tags$b(style = "color: #E05236;", "\u2014"), " Direction B")
+                 tags$span(tags$b(style = "color: #2980b9;", "-"), " Direction A"),
+                 tags$span(tags$b(style = "color: #E05236;", "-"), " Direction B")
                )
       )
     ),
