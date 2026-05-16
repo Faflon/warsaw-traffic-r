@@ -28,7 +28,12 @@ pak::pak("Faflon/warsaw-traffic-r")
 
 ## Setup
 
-### 1. Warsaw Open Data API key
+### 1. Install required packages
+
+    install.packages(c("usethis", "devtools"))
+    install.packages(c("R6", "sf", "shiny", "leaflet", "dplyr", "tidytransit")
+
+### 2. Warsaw Open Data API key
 
 The live vehicle feed requires a free API key from the Warsaw Open Data
 portal.
@@ -51,7 +56,16 @@ Restart your R session after saving. The key is loaded securely with
 `Sys.getenv("WARSAW_API_KEY")` - it is never hardcoded and is excluded
 from version control via `.gitignore`.
 
-### 2. Download GTFS schedule data
+### 3. Load and run
+
+    devtools::load_all()
+    WarsawTraffic::run_app()
+
+### 4. Updating route geometry (optional)
+
+Preprocessed route shapes are already included in the package as
+`inst/extdata/warsaw_routes.rds`. This step is only needed if you want
+to rebuild them from a newer GTFS feed.
 
 Download the current Warsaw transit schedule from ZTM:
 
@@ -63,23 +77,12 @@ Or download a cached snapshot (as of 2026-05-14) from Google Drive:
 snapshot](https://drive.google.com/drive/folders/1YAk-4QwEX6xpDsPgQMhWoTNd1t1SNXub?usp=sharing)
 
 Unzip the downloaded files directly into `inst/extdata/gtfs/` inside the
-package directory.
-
-### 3. Preprocess route geometry
-
-Run this once after downloading the GTFS data. It reads the schedule
-files, builds spatial route lines for all active bus and tram routes,
-and saves them as `inst/extdata/warsaw_routes.rds` inside the package:
+package directory, and then run:
 
 ``` r
 library(WarsawTraffic)
-
 build_route_shapes(gtfs_dir = "inst/extdata/gtfs")
 ```
-
-This step only needs to be repeated when you download a new GTFS feed.
-The function automatically detects today’s active service schedule from
-`calendar.txt` and warns you if the feed has expired.
 
 ------------------------------------------------------------------------
 
